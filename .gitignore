@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+
+# PyCharm project files
+.idea/
+*.iml
+
+# Flask cache files
+instance/
+*.log
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# HTML temporary/backup
+*.swp
+*.bak
+
+# Environment variables and config
+.env
+.env.*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# JSON data you don’t want uploaded (optional)
+data/*.json
+
+# Jupyter notebooks (if used in future)
+*.ipynb_checkpoints

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Legal Information</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #333;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #6a0dad;
+            color: white;
+            padding: 1em 2em;
+            text-align: center;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: underline;
+            margin-left: 1em;
+            font-size: 0.95em;
+        }
+
+        main {
+            padding: 2em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        section {
+            margin-bottom: 2.5em;
+        }
+
+        h1, h2 {
+            color: #6a0dad;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        footer {
+            background-color: #f9f9f9;
+            color: #666;
+            text-align: center;
+            padding: 1em;
+            font-size: 0.9em;
+            margin-top: 2em;
+        }
+
+        a.button {
+            background-color: #6a0dad;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        a.button:hover {
+            background-color: #5a009a;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Legal Information</h1>
+        <nav><a href="{{ url_for('index') }}">← Back to Home</a></nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Transparency & User Consent</h2>
+            <p>This application only utilizes publicly accessible search engine data to help you locate your digital footprint.</p>
+            <p>Any petitions generated are based on published privacy and takedown policies from the respective platforms.</p>
+        </section>
+
+        <section>
+            <h2>Privacy & Compliance</h2>
+            <p>We comply with international standards like the General Data Protection Regulation (GDPR) and India’s IT Act (2000) to support lawful digital removal requests.</p>
+            <p>No identifying user data is stored, saved, or transmitted beyond the active session.</p>
+        </section>
+
+        <section>
+            <h2>Liability Disclaimer</h2>
+            <p>Use of this tool does not guarantee the removal of content. It is the user's responsibility to ensure accuracy before petition submission.</p>
+            <p>This tool acts as a facilitator and does not make legally binding representations on your behalf.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Digital Footprint Cleaner. All rights reserved.</p>
+    </footer>
+</body>
+</html>

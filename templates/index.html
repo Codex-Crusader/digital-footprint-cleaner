@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Footprint Remover</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: #333;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: purple;
+    }
+
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid purple;
+      border-radius: 8px;
+    }
+
+    input[type="submit"] {
+      background-color: purple;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #6a0dad;
+    }
+
+    .checkbox-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checkbox-list li {
+      margin-bottom: 10px;
+    }
+
+    .footer {
+      margin-top: 40px;
+    }
+
+    a {
+      color: purple;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Digital Footprint Remover</h1>
+  <form method="POST">
+    <label for="user_info"><strong>Enter your name or email:</strong></label><br>
+    <input type="text" id="user_info" name="user_info" placeholder="e.g., bhargavaram krishnapur" required><br>
+
+    <input type="submit" value="Search Footprint">
+  </form>
+
+  {% if results %}
+    <hr>
+    <h2>Found Footprints</h2>
+    <form method="POST" action="/send">
+      <ul class="checkbox-list">
+        {% for result in results %}
+        <li>
+          <input type="checkbox" name="selected_sites" value="{{ result.id }}" checked>
+          <strong>{{ result.name }}</strong> - <a href="{{ result.url }}" target="_blank">{{ result.url }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <label for="user_name"><strong>Your Full Name (for petitions):</strong></label><br>
+      <input type="text" id="user_name" name="user_name" placeholder="e.g., Bhargavaram Krishnapur" required><br>
+
+      <input type="hidden" name="user_info" value="{{ user_info }}">
+      <input type="submit" value="Send Removal Requests">
+    </form>
+  {% endif %}
+
+  <div class="footer">
+    <p>Want to know your rights? <a href="/legal">Read our legal guide →</a></p>
+  </div>
+</body>
+</html>
