@@ -86,7 +86,7 @@ digital-footprint-cleaner/
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please check out the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please check out the [CONTRIBUTING.md](contributing.md) for guidelines.
 
 You can:
 
