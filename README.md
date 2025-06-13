@@ -83,12 +83,14 @@ digital-footprint-cleaner/
 ## 🔭 Roadmap
 
 ### Future Features & Contributions Welcome:
-
-* 🌐 Add multiple search engine support (Bing, Google APIs)
-* 🤖 AI-based classification of found links (e.g., leaks, mentions, resumes)
-* 🧾 Petition editor before sending
-* 📬 Integration with email APIs for actual petition delivery
-* 📊 Dashboard to track requests sent and pending status
+The current version lays the foundation for identifying personal data online and generating takedown petitions. Future versions will aim to take this further by:
+* 🧹 Pruning sensitive data from the internet using legal and ethical methods after identifying digital footprints.
+* 📬 Integrating with takedown request portals and email services to automate delivery of removal petitions.
+* 🧠 Enhancing link classification using NLP to distinguish between harmless mentions and potentially harmful exposure (e.g., resumes, data leaks, personal contact info).
+* 🌍 Expanding international support for region-specific privacy laws (e.g., CCPA, GDPR, India's DPDP Act).
+* 🧾 Customizable petition templates based on site and data type.
+* 📊 Adding a personal privacy dashboard to track takedown requests, statuses, and threat levels.
+* 🕵️ Anonymized community-driven reports to identify new high-risk platforms.
 
 ---
 
