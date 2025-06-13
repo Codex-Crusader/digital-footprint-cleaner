@@ -1,20 +1,17 @@
-
----
-
-````
+````markdown
 # 🕵️‍♂️ Digital Footprint Cleaner
 
-A privacy-first, open-source web app that helps users find traces of their personal information on the internet — and generate removal petitions to reclaim their digital identity.
+A privacy-first, open-source web app that helps users identify and clean up traces of their personal information across the web — by generating real, ready-to-send data removal petitions.
 
 ---
 
 ## 🚀 Features
 
-- 🔍 **Search** for your name or email using DuckDuckGo (privacy-respecting).
-- 📄 **Select** the search results you want to remove.
-- ✉️ **Auto-generate legal petitions** requesting content removal.
-- ⚖️ **Legal info page** explaining your digital rights.
-- 💡 Simple, clean UI — white primary color, purple accents.
+- 🔍 **Search** for your name or email using DuckDuckGo (privacy-respecting, no tracking).
+- 📄 **Select** results you want removed.
+- ✉️ **Auto-generate legal petitions** following GDPR/IT Act-style formats.
+- ⚖️ **Legal guide** included to inform you of your rights.
+- 💡 Simple, clean UI — white background with purple accents.
 - ✅ Fully written in **Python + HTML** (PyCharm Community Edition compatible).
 
 ---
@@ -23,7 +20,7 @@ A privacy-first, open-source web app that helps users find traces of their perso
 
 - **Frontend**: HTML (Jinja2 templates)
 - **Backend**: Python (Flask)
-- **Search**: [`duckduckgo-search`](https://pypi.org/project/duckduckgo-search/)
+- **Search API**: [`duckduckgo-search`](https://pypi.org/project/duckduckgo-search/)
 - **Petition Generator**: Custom Python logic
 
 ---
@@ -40,7 +37,7 @@ A privacy-first, open-source web app that helps users find traces of their perso
 
    ```bash
    python -m venv venv
-   source venv/bin/activate  # on Windows use `venv\Scripts\activate`
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**
@@ -55,7 +52,7 @@ A privacy-first, open-source web app that helps users find traces of their perso
    python app.py
    ```
 
-5. **Visit in your browser**
+5. **Open in your browser**
 
    ```
    http://127.0.0.1:5000
@@ -84,34 +81,47 @@ digital-footprint-cleaner/
 
 ---
 
+## 🔭 Roadmap
+
+### Future Features & Contributions Welcome:
+
+* 🌐 Add multiple search engine support (Bing, Google APIs)
+* 🤖 AI-based classification of found links (e.g., leaks, mentions, resumes)
+* 🧾 Petition editor before sending
+* 📬 Integration with email APIs for actual petition delivery
+* 📊 Dashboard to track requests sent and pending status
+
+---
+
 ## 🤝 Contributing
 
-Contributions are welcome! Please check out the [CONTRIBUTING.md](contributing.md) for guidelines.
+Contributions are welcome!
+
+📌 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 You can:
 
-* Suggest feature ideas
-* Improve the petition-writing logic
-* Add new legal support templates
-* Fix bugs or improve search parsing
+* Suggest new features
+* Improve petition generation logic
+* Add global legal templates
+* Enhance search result filters
+* Refactor code or improve documentation
+
+Fork it → Improve it → Submit a PR 🙌
 
 ---
 
 ## 🛡 License
 
-This project is licensed under the [MIT License](LICENSE_MIT.md).
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
 ## 🙏 Acknowledgements
 
-* DuckDuckGo for private web search
-* Flask for minimal web frameworks
-* You — for caring about your digital privacy
+* [DuckDuckGo](https://duckduckgo.com) — for privacy-friendly web search
+* [Flask](https://flask.palletsprojects.com) — for its lightweight Python web framework
+* You — for caring about your digital identity 🧠
 
----
-
-## 📬 Contact
-
-Created by [Bhargavaram Krishnapur](https://github.com/Codex-Crusader) — feel free to reach out via GitHub Issues or Pull Requests.
+```
 
