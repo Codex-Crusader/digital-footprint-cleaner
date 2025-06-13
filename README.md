@@ -123,6 +123,3 @@ This project is licensed under the [MIT License](LICENSE_MIT.md).
 * [DuckDuckGo](https://duckduckgo.com) — for privacy-friendly web search
 * [Flask](https://flask.palletsprojects.com) — for its lightweight Python web framework
 * You — for caring about your digital identity 🧠
-
-```
-
