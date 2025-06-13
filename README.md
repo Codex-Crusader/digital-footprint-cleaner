@@ -96,7 +96,7 @@ digital-footprint-cleaner/
 
 Contributions are welcome!
 
-📌 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+📌 See [CONTRIBUTING.md](contributing.md) for guidelines.
 
 You can:
 
@@ -112,7 +112,7 @@ Fork it → Improve it → Submit a PR 🙌
 
 ## 🛡 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE_MIT.md).
 
 ---
 
