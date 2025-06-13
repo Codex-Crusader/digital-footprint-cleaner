@@ -102,7 +102,7 @@ If you're submitting backend changes, make sure the app still runs and displays 
 
 ### 6. 🙋 Ask First
 
-If you're unsure whether your idea fits the scope of the project, feel free to [open an issue](https://github.com/YOUR_USERNAME/digital-footprint-cleaner/issues) to discuss it before starting to code.
+If you're unsure whether your idea fits the scope of the project, feel free to [open an issue](https://github.com/Codex_Crusader/digital-footprint-cleaner/issues) to discuss it before starting to code.
 
 ---
 
