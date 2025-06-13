@@ -24,14 +24,13 @@ A privacy-first, open-source web app that helps users identify and clean up trac
 - **Petition Generator**: Custom Python logic
 
 ---
-
+````
 ## 🛠️ Installation
 
 1. **Clone the repo**
    ```bash
    git clone https://github.com/YOUR_USERNAME/digital-footprint-cleaner.git
    cd digital-footprint-cleaner
-````
 
 2. **Create a virtual environment (recommended)**
 
