@@ -70,4 +70,6 @@ def legal():
     return render_template("legal.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Enable debug mode only in development environment
+    debug_mode = os.getenv("FLASK_ENV", "production") == "development"
+    app.run(debug=debug_mode)
