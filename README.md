@@ -1,4 +1,3 @@
-````markdown
 # 🕵️‍♂️ Digital Footprint Cleaner
 
 A privacy-first, open-source web app that helps users identify and clean up traces of their personal information across the web — by generating real, ready-to-send data removal petitions.
@@ -22,9 +21,9 @@ A privacy-first, open-source web app that helps users identify and clean up trac
 - **Backend**: Python (Flask)
 - **Search API**: [`duckduckgo-search`](https://pypi.org/project/duckduckgo-search/)
 - **Petition Generator**: Custom Python logic
-
+- 
 ---
-````
+
 ## 🛠️ Installation
 
 1. **Clone the repo**
@@ -116,7 +115,7 @@ Fork it → Improve it → Submit a PR 🙌
 
 This project is licensed under the [MIT License](LICENSE_MIT.md).
 
----
+
 
 ## 🙏 Acknowledgements
 
