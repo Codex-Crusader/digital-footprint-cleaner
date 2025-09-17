@@ -3,6 +3,12 @@
 A privacy-first, open-source web app that helps users identify and clean up traces of their personal information across the web — by generating real, ready-to-send data removal petitions.
 
 ---
+## Pictures
+
+![13](https://github.com/user-attachments/assets/efd8e506-ce7c-478f-bea9-6e615d0a318c)
+![12](https://github.com/user-attachments/assets/47349966-df17-4032-860a-743dcade796d)
+
+---
 
 ## 🚀 Features
 
