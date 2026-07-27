@@ -20,6 +20,9 @@ instance/
 *.log
 flask.log
 
+# duckduckgo-search / ddgs on-disk cache
+vqd_cache/
+
 # Distribution / packaging
 build/
 dist/
@@ -33,6 +36,7 @@ dist/
 # Environment variables and config
 .env
 .env.*
+!.env.example
 
 # OS-specific files
 .DS_Store
@@ -40,13 +44,18 @@ Thumbs.db
 
 # JSON data you don’t want uploaded (optional)
 data/*.json
+# ...but do ship the curated data files that ARE part of the app
+!data/services.json
+!data/brokers.json
 
 # Jupyter notebooks (if used in future)
 *.ipynb_checkpoints
 
-# Testing coverage data
+# Testing / linting caches and coverage data
 .coverage
 htmlcov/
+.pytest_cache/
+.mypy_cache/
 
 # Editor-specific files
 .vscode/

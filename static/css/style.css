@@ -1,0 +1,408 @@
+:root {
+  --purple: #6a0dad;
+  --purple-dark: #55088c;
+  --purple-soft: #f3e8fb;
+  --ink: #1f2330;
+  --text: #3a3f4b;
+  --muted: #6b7280;
+  --line: #e7e5ee;
+  --card: #ffffff;
+  --page: #f5f3f9;
+  --shadow: 0 1px 3px rgba(20, 10, 40, 0.06), 0 8px 24px rgba(20, 10, 40, 0.06);
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background: var(--page);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin: 0 0 4px;
+}
+
+h1 .logo {
+  color: var(--purple);
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin: 18px 0;
+}
+
+.lead {
+  color: var(--muted);
+  margin: 0 0 22px;
+  font-size: 0.98rem;
+}
+
+/* Forms */
+label {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 12px 0 6px;
+  font-size: 0.92rem;
+}
+
+input[type="text"],
+input[type="email"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--purple-soft);
+}
+
+input[type="submit"],
+button {
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin-top: 16px;
+  transition: background 0.15s, transform 0.05s;
+}
+
+input[type="submit"]:hover,
+button:hover {
+  background: var(--purple-dark);
+}
+
+input[type="submit"]:active,
+button:active {
+  transform: translateY(1px);
+}
+
+/* Result / checklist lists */
+.checkbox-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.checkbox-list li {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #fff;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.checkbox-list li:hover {
+  border-color: #d9d3e6;
+  background: #fcfbff;
+}
+
+.snippet {
+  display: block;
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+a {
+  color: var(--purple);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 26px 0;
+}
+
+/* Flash messages */
+.flashes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.flash {
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+}
+
+.flash-success {
+  background: #e9f9ef;
+  border-color: #9fd9b4;
+  color: #1e6b34;
+}
+
+.flash-warning {
+  background: #fff6e0;
+  border-color: #f3d38a;
+  color: #7a5900;
+}
+
+.flash-danger {
+  background: #fdeceb;
+  border-color: #f1b4af;
+  color: #a50e0e;
+}
+
+.notice {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Exposure risk card */
+.risk-card {
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--purple);
+  background: #fff;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.risk-badge {
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.risk-card p {
+  margin: 0;
+  color: var(--text);
+}
+
+.risk-High {
+  border-left-color: #d93025;
+}
+.risk-High .risk-badge {
+  background: #fdeceb;
+  color: #a50e0e;
+}
+
+.risk-Medium {
+  border-left-color: #f4b400;
+}
+.risk-Medium .risk-badge {
+  background: #fff6e0;
+  color: #7a5900;
+}
+
+.risk-Low {
+  border-left-color: #34a853;
+}
+.risk-Low .risk-badge {
+  background: #e9f9ef;
+  color: #1e6b34;
+}
+
+/* Data-broker "you appear here" alert */
+.brokers-found {
+  border: 1px solid #f1b4af;
+  border-left: 6px solid #d93025;
+  background: #fffafa;
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin: 18px 0;
+}
+
+.brokers-found h2 {
+  color: #a50e0e;
+  margin-top: 0;
+}
+
+/* Badges / pills */
+.badge {
+  display: inline-block;
+  margin: 22px 0 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--purple-soft);
+  color: var(--purple-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+h2 .badge {
+  margin: 0 0 0 8px;
+  vertical-align: middle;
+}
+
+.badge-danger {
+  background: #fdeceb;
+  color: #a50e0e;
+}
+
+.cat-data_broker {
+  background: #fdeceb;
+  color: #a50e0e;
+}
+
+.cat-public_records {
+  background: #fff6e0;
+  color: #7a5900;
+}
+
+/* Proactive broker checklist (prominent) */
+.broker-checklist {
+  border-top: 4px solid var(--purple);
+}
+
+.broker-checklist h2 {
+  margin-top: 0;
+}
+
+.broker-grid {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.broker-grid li {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.broker-grid li:hover {
+  border-color: #d9d3e6;
+}
+
+.broker-name {
+  font-size: 0.92rem;
+}
+
+.broker-actions {
+  display: flex;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.broker-grid .opt-out {
+  font-weight: 600;
+}
+
+/* Petitions */
+.petition {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  background: #fbfaff;
+}
+
+.petition pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+  font-size: 0.88rem;
+  margin: 8px 0 0;
+}
+
+.footer {
+  margin-top: 34px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Legal page */
+header {
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+  color: #fff;
+  padding: 26px 20px;
+  text-align: center;
+}
+
+header h1 {
+  color: #fff;
+}
+
+header nav a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+main section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 24px;
+  margin-bottom: 18px;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  padding: 20px;
+  font-size: 0.9rem;
+}

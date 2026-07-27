@@ -1,0 +1,10 @@
+# Development / test dependencies (in addition to requirements.txt)
+-r requirements.txt
+
+# Testing
+pytest>=8.0
+
+# Linting / static analysis (run before submitting a PR)
+mypy>=1.8
+pyflakes>=3.2
+pycodestyle>=2.11
