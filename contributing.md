@@ -1,68 +1,67 @@
+# Contributing to Digital Footprint Cleaner
 
----
+Thanks for your interest in contributing. Your help is appreciated in making
+this privacy-focused tool better, smarter, and more useful.
 
-### ✅ `CONTRIBUTING.md`
+## Project Goal
 
-````markdown
-# 🤝 Contributing to Digital Footprint Cleaner
+Digital Footprint Cleaner is an open-source web app built in Python and HTML
+that helps people find where their personal data is exposed online and generate
+removal requests. The project aims to be simple, secure, and honest about what
+it can and cannot do.
 
-Thanks for your interest in contributing to **Digital Footprint Cleaner**! Your help is greatly appreciated in making this privacy-focused tool better, smarter, and more helpful to users everywhere.
-
----
-
-## 🧭 Project Goal
-
-Digital Footprint Cleaner is an open-source web app built in **Python and HTML** that helps users identify and erase their digital presence by generating automated petition requests. The project is designed to be simple, secure, and legal — with no hardcoded logic or technical debt.
-
----
-
-## 📋 Contribution Guidelines
-
-### 1. 🚀 Getting Started
+## Getting Started
 
 - Fork this repository.
 - Clone your fork:
+
   ```bash
   git clone https://github.com/Codex-Crusader/digital-footprint-cleaner.git
   cd digital-footprint-cleaner
-````
+  ```
 
-* Create a virtual environment and activate it.
-* Install dependencies:
+- Create a virtual environment and activate it.
+- Install dependencies:
 
   ```bash
-  pip install -r requirements.txt
+  pip install -r requirements-dev.txt
   ```
-* Run the app locally:
+
+- Run the app locally:
 
   ```bash
   python app.py
   ```
 
----
+## What You Can Work On
 
-### 2. ✅ What You Can Work On
+- Improve search relevance or result classification (`analysis.py`).
+- Add or verify data-broker opt-out entries in `data/brokers.json`.
+- Enhance the removal petition templates.
+- Improve frontend design or accessibility.
+- Add unit or integration tests.
+- Refactor to reduce complexity or improve modularity.
 
-* 🧠 Improve search relevance or filtering
-* 📝 Enhance legal petition templates
-* 🌍 Add more website service entries in `services.json`
-* 🎨 Improve frontend design or accessibility
-* 🧪 Add unit or integration tests
-* 📦 Refactor to reduce complexity or improve modularity
-* 🧰 Create APIs or plugins to expand functionality
+## Code Style
 
----
+- Follow PEP 8 for Python code.
+- Keep functions short, reusable, and documented.
+- Avoid hardcoding URLs or secrets; read configuration from the environment.
+- Use English for all comments and documentation.
 
-### 3. 📁 Code Style
+## Testing
 
-* Follow PEP8 standards for Python code.
-* Keep functions short, reusable, and well-documented.
-* Use environment-safe practices (avoid hardcoding any URLs or secrets).
-* Use English for all comments and documentation.
+Run the test suite before submitting a pull request:
 
----
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
-### 4. 🔍 Submitting a Pull Request
+Make sure the suite passes and the app still runs (`python app.py`, then visit
+`http://127.0.0.1:5000`).
+
+## Submitting a Pull Request
 
 1. Create a new branch:
 
@@ -73,7 +72,7 @@ Digital Footprint Cleaner is an open-source web app built in **Python and HTML**
 2. Commit your changes with a clear message:
 
    ```bash
-   git commit -m "Add: legal template for XYZ site"
+   git commit -m "Add: verified opt-out entry for XYZ broker"
    ```
 
 3. Push to your fork and open a pull request:
@@ -82,36 +81,16 @@ Digital Footprint Cleaner is an open-source web app built in **Python and HTML**
    git push origin your-feature-name
    ```
 
-4. In your PR, clearly describe what the change does and why it’s needed.
+4. In your PR, describe what the change does and why it is needed.
 
----
+## Ask First
 
-### 5. 🧪 Testing
+If you are unsure whether your idea fits the scope of the project, open an
+[issue](https://github.com/Codex-Crusader/digital-footprint-cleaner/issues) to
+discuss it before starting.
 
-Please test your features locally before submitting a pull request. You can manually run:
+## Code of Conduct
 
-```bash
-python app.py
-```
-
-Then test via `http://127.0.0.1:5000`.
-
-If you're submitting backend changes, make sure the app still runs and displays correctly.
-
----
-
-### 6. 🙋 Ask First
-
-If you're unsure whether your idea fits the scope of the project, feel free to [open an issue](https://github.com/Codex-Crusader/digital-footprint-cleaner/issues) to discuss it before starting to code.
-
----
-
-## 💬 Code of Conduct
-
-Be kind, respectful, and helpful. Harassment or discrimination of any kind will not be tolerated. We aim to maintain a safe, inclusive, and collaborative space for all contributors.
-
----
-
-Thank you for helping make the internet a more private and secure place! 🌐
-
-
+Be kind, respectful, and helpful. Harassment or discrimination of any kind will
+not be tolerated. We aim to maintain a safe, inclusive, and collaborative space
+for all contributors.
