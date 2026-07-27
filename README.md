@@ -9,6 +9,20 @@
 A privacy-first, open-source web app that helps you find where your personal
 information is exposed online and generate ready-to-send data-removal requests.
 
+## Screenshots
+
+**Home** - enter a name or email, with the proactive data-broker opt-out checklist always available:
+
+![Home page](docs/screenshots/home.jpg)
+
+**Exposure report** — results are classified by category and scored by risk:
+
+![Exposure report](docs/screenshots/exposure-report.jpg)
+
+**Data-broker checklist** - verified opt-out links plus a per-broker "Check" to confirm whether a site lists you:
+
+![Data-broker opt-out checklist](docs/screenshots/broker-checklist.jpg)
+
 ## Features
 
 - **Search** for your name or email using DuckDuckGo (privacy-respecting, no tracking).
