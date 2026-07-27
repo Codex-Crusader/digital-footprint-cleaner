@@ -2,95 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Digital Footprint Remover</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: white;
-      color: #333;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      color: purple;
-    }
-
-    input[type="text"], input[type="email"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 2px solid purple;
-      border-radius: 8px;
-    }
-
-    input[type="submit"] {
-      background-color: purple;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    input[type="submit"]:hover {
-      background-color: #6a0dad;
-    }
-
-    .checkbox-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .checkbox-list li {
-      margin-bottom: 10px;
-    }
-
-    .footer {
-      margin-top: 40px;
-    }
-
-    a {
-      color: purple;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digital Footprint Cleaner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <h1>Digital Footprint Remover</h1>
-  <form method="POST">
-    <label for="user_info"><strong>Enter your name or email:</strong></label><br>
-    <input type="text" id="user_info" name="user_info" placeholder="e.g., bhargavaram krishnapur" required><br>
+  <main class="container">
+    <h1><span class="logo">Digital Footprint Cleaner</span></h1>
+    <p class="lead">See where your personal information is exposed online and get direct, verified links to remove it. Use this to check <strong>your own</strong> footprint, or someone's with their consent.</p>
 
-    <input type="submit" value="Search Footprint">
-  </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="flash flash-{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
 
-  {% if results %}
-    <hr>
-    <h2>Found Footprints</h2>
-    <form method="POST" action="/send">
-      <ul class="checkbox-list">
-        {% for result in results %}
-        <li>
-          <input type="checkbox" name="selected_sites" value="{{ result.id }}" checked>
-          <strong>{{ result.name }}</strong> - <a href="{{ result.url }}" target="_blank">{{ result.url }}</a>
-        </li>
-        {% endfor %}
-      </ul>
+    {% if error %}
+      <p class="flash flash-danger">{{ error }}</p>
+    {% endif %}
 
-      <label for="user_name"><strong>Your Full Name (for petitions):</strong></label><br>
-      <input type="text" id="user_name" name="user_name" placeholder="e.g., Bhargavaram Krishnapur" required><br>
-
-      <input type="hidden" name="user_info" value="{{ user_info }}">
-      <input type="submit" value="Send Removal Requests">
+    <form method="POST" action="{{ url_for('index') }}" class="card">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="user_info">Your name or email</label>
+      <input type="text" id="user_info" name="user_info"
+             maxlength="200" required
+             placeholder="e.g., Jane Doe"
+             value="{{ user_info }}">
+      <label for="location">City / state <span class="notice">(optional, helps with common names)</span></label>
+      <input type="text" id="location" name="location"
+             maxlength="200"
+             placeholder="e.g., Austin, TX"
+             value="{{ location }}">
+      <input type="submit" value="Scan My Footprint">
     </form>
-  {% endif %}
 
-  <div class="footer">
-    <p>Want to know your rights? <a href="/legal">Read our legal guide →</a></p>
-  </div>
+    {% if report and report.total > 0 %}
+      <section class="risk-card risk-{{ report.risk_level }}">
+        <span class="risk-badge">{{ report.risk_level }} exposure</span>
+        <p>
+          <strong>{{ report.total }}</strong> result(s) analysed &middot;
+          <strong>{{ report.brokers_found|length }}</strong> data-broker listing(s) &middot;
+          exposure score <strong>{{ report.score }}/100</strong>
+        </p>
+      </section>
+
+      {% if report.brokers_found %}
+        <section class="brokers-found">
+          <h2>You appear on these data brokers <span class="badge badge-danger">Exposed</span></h2>
+          <p class="notice">These sites publish personal details such as address, phone, and relatives. Opt out directly:</p>
+          <ul class="checkbox-list">
+            {% for b in report.brokers_found %}
+            <li>
+              <strong>{{ b.name }}</strong>
+              <a href="{{ b.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt out</a>
+              <span class="snippet"><a href="{{ b.url }}" target="_blank" rel="noopener noreferrer">{{ b.url }}</a></span>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>Findings by category</h2>
+        <p class="notice">Select the results you want to generate removal petitions for.</p>
+        <form method="POST" action="{{ url_for('send') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% for cat in report.categories %}
+            <div><span class="badge cat-{{ cat.key }}">{{ cat.label }} &middot; {{ cat.results|length }}</span></div>
+            <ul class="checkbox-list">
+              {% for result in cat.results %}
+              <li>
+                <input type="checkbox" name="selected_sites" value="{{ result.id }}"
+                       {% if cat.key in ('data_broker', 'public_records') %}checked{% endif %}>
+                <strong>{{ result.title }}</strong>
+                <span class="snippet"><a href="{{ result.url }}" target="_blank" rel="noopener noreferrer">{{ result.url }}</a></span>
+                {% if result.snippet %}<span class="snippet">{{ result.snippet }}</span>{% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          {% endfor %}
+
+          <label for="user_name">Your full name (for petitions)</label>
+          <input type="text" id="user_name" name="user_name"
+                 maxlength="100" required
+                 placeholder="e.g., Jane Doe">
+          <input type="submit" value="Generate Removal Petitions">
+        </form>
+      </section>
+    {% elif searched and not error %}
+      <section class="card">
+        <p class="notice">No web results found for that search. You can still proactively remove yourself from the major data brokers below.</p>
+      </section>
+    {% endif %}
+
+    {% if petitions %}
+      <section class="card">
+        <h2>Generated Petitions</h2>
+        <p class="notice">Review, copy, and send these to the relevant site or data controller.</p>
+        {% for petition in petitions %}
+          <div class="petition">
+            <strong>{{ petition.title }}</strong>
+            <pre>{{ petition.text }}</pre>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if brokers %}
+      <section class="card broker-checklist">
+        <h2>Remove yourself from major data brokers</h2>
+        <p class="notice">
+          The single most useful privacy action: opt out of the people-search sites that sell your info.
+          {% if user_info %}Use <strong>Check</strong> to run a name-scoped search and confirm whether a site lists you.{% endif %}
+          Links verified July 2026. Removals are not permanent, so repeat every few months.
+        </p>
+        <ul class="broker-grid">
+          {% for b in brokers %}
+          <li>
+            <span class="broker-name">{{ b.name }}</span>
+            <span class="broker-actions">
+              {% if user_info %}
+                <a href="https://duckduckgo.com/?q={{ ('site:' ~ b.domain ~ ' \"' ~ user_info ~ '\"') | urlencode }}" target="_blank" rel="noopener noreferrer">Check</a>
+              {% endif %}
+              <a class="opt-out" href="{{ b.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt out</a>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <div class="footer">
+      <p>Want to know your rights? <a href="{{ url_for('legal') }}">Read our legal guide</a></p>
+    </div>
+  </main>
 </body>
 </html>
