@@ -73,15 +73,15 @@ def test_broker_checklist_shows_scoped_check_link_after_scan(client, csrf_token,
     monkeypatch.setattr(app_module, "find_footprint", lambda *_args, **_kwargs: [])
     resp = client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
     # A scoped DuckDuckGo "Check" link is generated per broker so the user can
-    # confirm whether a broker actually lists them.
-    assert b"duckduckgo.com/?q=site" in resp.data
-    assert b"spokeo.com" in resp.data
+    # confirm whether a broker actually lists them. Assert the full check URL
+    # (with scheme) rather than a bare host substring.
+    assert b"https://duckduckgo.com/?q=site%3Aspokeo.com" in resp.data
 
 
 def test_landing_page_has_no_check_links(client):
     # Before any search there is no name to scope a check to.
     resp = client.get("/")
-    assert b"duckduckgo.com/?q=site" not in resp.data
+    assert b"https://duckduckgo.com/?q=site" not in resp.data
 
 
 def test_results_render_with_safe_link(client, csrf_token, monkeypatch):
@@ -127,7 +127,7 @@ def test_send_renders_generated_petitions(client, csrf_token, monkeypatch):
     )
     assert resp.status_code == 200
     assert b"Generated Petitions" in resp.data
-    assert b"example.com/jane" in resp.data
+    assert b"https://example.com/jane" in resp.data
 
 
 def test_send_with_no_selection_redirects(client, csrf_token):

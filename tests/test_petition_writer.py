@@ -17,12 +17,12 @@ def test_send_petitions_generates_for_duck_ids():
 def test_send_petitions_skips_unsafe_or_missing_urls():
     result_map = {
         "duck_0": "javascript:alert(1)",  # unsafe scheme -> skipped
-        "duck_1": "https://ok.example.com",  # valid -> kept
+        "duck_1": "https://ok.example.com/profile",  # valid -> kept
     }
     petitions = petition_writer.send_petitions(["duck_0", "duck_1", "duck_2"], result_map)
     # Only duck_1 survives (duck_0 unsafe, duck_2 absent from map).
     assert len(petitions) == 1
-    assert "ok.example.com" in petitions[0]["text"]
+    assert "https://ok.example.com/profile" in petitions[0]["text"]
 
 
 def test_send_petitions_defaults_and_clamps_name():
