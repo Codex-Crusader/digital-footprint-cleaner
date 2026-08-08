@@ -7,19 +7,21 @@
 [![Security](https://img.shields.io/badge/security-hardened-1f6feb.svg)](SECURITY.md)
 
 A privacy-first, open-source web app that helps you find where your personal
-information is exposed online and generate ready-to-send data-removal requests.
+information is exposed online and generate ready-to-send data-removal requests. (still in development)
 
 ## Screenshots
 
 **Scan.** Name and location, plus optional narrowing factors that tell namesakes
 apart. Depth is yours to choose:
 
-![Scan form](docs/screenshots/home.jpg)
+<img width="1895" height="860" alt="image" src="https://github.com/user-attachments/assets/31e4c185-a15a-404d-a54e-5fff32424378" />
+
 
 **Exposure report.** A readout of what was checked and what was found, coverage
 reported as prominently as results, and broker listings called out first:
 
-![Exposure report](docs/screenshots/exposure-report.jpg)
+<img width="1885" height="858" alt="image" src="https://github.com/user-attachments/assets/8b7b13bd-3e6f-408a-83e4-5c262fa0644a" />
+
 
 **Match confidence.** Every result says why it is believed to be you, with the
 facts that matched. Results that never name the subject are separated out:
@@ -29,7 +31,7 @@ facts that matched. Results that never name the subject are separated out:
 **Data-broker checklist.** Verified opt-out links for 30+ people-search sites,
 plus a per-broker check to confirm whether one lists you:
 
-![Data-broker opt-out checklist](docs/screenshots/broker-checklist.jpg)
+<img width="1892" height="863" alt="image" src="https://github.com/user-attachments/assets/fde68906-3173-4d9d-a1f8-94a0c62a32de" />
 
 **Removal tracker.** Opting out is a correspondence, not a click:
 
