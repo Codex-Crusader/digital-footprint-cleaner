@@ -1,4 +1,4 @@
-"""Digital Footprint Cleaner -- Flask web application.
+"""Digital Footprint Cleaner: Flask web application.
 
 A small, privacy-first tool that searches for a person's public footprint and
 generates data-removal petitions. Security controls live here so the whole app
@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 
 # Flask is declared in both pyproject.toml ([project] dependencies) and
 # requirements.txt. PyCharm's package inspection does not pick either up in this
-# project -- see the note in pyproject.toml -- so the check is suppressed rather
+# project, see the note in pyproject.toml, so the check is suppressed rather
 # than left as a standing false positive.
 # noinspection PyPackageRequirements
 from flask import (
@@ -40,6 +40,7 @@ from flask import (
 import analysis
 import scanner
 from utils import (
+    auth,
     email_signals,
     petition_writer,
     result_store,
@@ -109,7 +110,7 @@ def _is_rate_limited(client_ip: str, cost: int = 1) -> bool:
     endpoints are no longer equal: one plain search is a single backend call,
     but a broker sweep or a username check fans out into many. Charging them
     all one token would let a client burn the upstream provider's quota in a
-    couple of clicks -- after which every user gets throttled results.
+    couple of clicks: after which every user gets throttled results.
     """
     now = time.time()
     cost = max(1, int(cost))
@@ -128,6 +129,126 @@ def reset_rate_limiter():
     """Clear all recorded request timestamps. Public hook used by tests."""
     with _rate_lock:
         _rate_hits.clear()
+
+
+# --- Access control ----------------------------------------------------------
+# Computed once at import so a passcode change requires a restart, and so the
+# PBKDF2 derivation of DFC_PASSCODE is not paid on every request.
+PASSCODE_HASH = auth.configured_hash()
+LOCK_ENABLED = bool(PASSCODE_HASH)
+_login_throttle = auth.LoginThrottle()
+
+# Endpoints reachable without unlocking. Kept minimal and explicit: an
+# allowlist fails closed, so a route added later is protected by default rather
+# than exposed by an oversight.
+_PUBLIC_ENDPOINTS = frozenset({"login", "static"})
+
+if not LOCK_ENABLED:
+    logger.warning(
+        "No passcode configured. Anyone with access to this machine can open "
+        "the app. Set DFC_PASSCODE (or DFC_PASSCODE_HASH) to require one."
+    )
+
+
+def reset_login_throttle():
+    """Clear recorded login attempts. Public hook used by tests."""
+    _login_throttle.reset()
+
+
+@app.before_request
+def reject_foreign_hosts():
+    """Refuse requests that are not addressed to this machine.
+
+    Bound to loopback, this app is still reachable from any page the user has
+    open: a browser will resolve an attacker-controlled hostname to 127.0.0.1
+    and then treat the app as same-origin, which is DNS rebinding. CSRF tokens
+    do not help there, because the rebound page can read the token out of the
+    response it just fetched.
+
+    Checking the Host header closes it. Browsers send the hostname the user
+    actually navigated to, so a rebound request arrives naming the attacker's
+    domain and never reaches a route.
+    """
+    if not auth.host_is_allowed(request.headers.get("Host")):
+        logger.warning("Refused request with unexpected Host header.")
+        abort(403, description="This app only answers requests addressed to localhost.")
+
+
+@app.before_request
+def require_unlock():
+    """Gate every non-public endpoint behind the passcode, when one is set."""
+    if not LOCK_ENABLED or request.endpoint in _PUBLIC_ENDPOINTS:
+        return None
+    if auth.session_is_fresh(session.get("unlocked_at")):
+        # Sliding expiry: activity keeps the session alive, idleness ends it.
+        session["unlocked_at"] = time.time()
+        return None
+    session.pop("unlocked_at", None)
+    return redirect(url_for("login", next=request.path))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Unlock the app with the configured passcode."""
+    if not LOCK_ENABLED:
+        return redirect(url_for("index"))
+    if auth.session_is_fresh(session.get("unlocked_at")):
+        return redirect(url_for("index"))
+
+    client = request.remote_addr or "unknown"
+    error = None
+
+    if request.method == "POST":
+        if _login_throttle.is_locked_out(client):
+            wait = _login_throttle.seconds_remaining(client)
+            error = f"Too many attempts. Try again in {wait} second(s)."
+        elif auth.verify_passcode(request.form.get("passcode", ""), PASSCODE_HASH):
+            _login_throttle.record_success(client)
+            # Rotate the session on privilege change so a token captured before
+            # the login cannot be replayed as an authenticated one.
+            csrf = session.get("csrf_token")
+            session.clear()
+            session["csrf_token"] = csrf or secrets.token_urlsafe(32)
+            session["unlocked_at"] = time.time()
+            logger.info("Unlocked by %s", client)
+            return redirect(_safe_next(request.args.get("next")))
+        else:
+            _login_throttle.record_failure(client)
+            logger.warning("Failed unlock attempt from %s", client)
+            error = "Incorrect passcode."
+
+    return render_template("login.html", error=error, active_page="login")
+
+
+def _safe_next(target):
+    """Return a safe same-site redirect target, defaulting to the home page.
+
+    Only a path beginning with a single ``/`` is accepted. ``//evil.example``
+    is a protocol-relative URL that browsers treat as absolute, so the usual
+    "starts with /" check alone is an open-redirect.
+    """
+    if isinstance(target, str) and target.startswith("/") and not target.startswith("//"):
+        return target
+    return url_for("index")
+
+
+@app.route("/lock", methods=["POST"])
+def lock():
+    """End the session immediately."""
+    session.pop("unlocked_at", None)
+    flash("Locked. Enter the passcode to continue.", "success")
+    return redirect(url_for("login") if LOCK_ENABLED else url_for("index"))
+
+
+@app.context_processor
+def inject_protection_state():
+    """Expose the lock state so the UI can be honest about what protects it."""
+    state, explanation = auth.describe_protection(LOCK_ENABLED)
+    return {
+        "lock_enabled": LOCK_ENABLED,
+        "protection_state": state,
+        "protection_explanation": explanation,
+    }
 
 
 # --- CSRF protection --------------------------------------------------------
@@ -184,7 +305,7 @@ def _remember_results(results):
     """Store the id-to-URL map server-side and put only a token in the session.
 
     The map used to live in the session cookie itself, which held ten results
-    comfortably and a deep scan's hundred-plus not at all -- see
+    comfortably and a deep scan's hundred-plus not at all: see
     :mod:`utils.result_store` for what that silently broke.
     """
     token = result_store.store.put(
@@ -216,7 +337,6 @@ def _render_index(**overrides):
         "user_info": "",
         "location": "",
         "error": None,
-        "searched": False,
         "petitions": None,
         "broker_checks": None,
         "signals": None,
@@ -267,17 +387,15 @@ def index():
     coverage = None
     depth = search_plan.DEFAULT_DEPTH
     error = None
-    searched = False
     results = []
 
     if request.method == "POST":
         profile = IdentityProfile.from_form(request.form)
         depth = search_plan.resolve_depth(request.form.get("depth"))
-        searched = True
 
         # Charged at the size of the plan about to run, derived from the plan
         # itself. A hardcoded number silently undercharges the moment a depth
-        # tier gains a pass -- the same reasoning as USERNAME_CHECK_COST.
+        # tier gains a pass: the same reasoning as USERNAME_CHECK_COST.
         cost = search_plan.plan_size(profile, depth)
 
         if not profile.has_name:
@@ -315,7 +433,6 @@ def index():
         user_info=profile.full_name,
         location=profile.location,
         error=error,
-        searched=searched,
     )
 
 
@@ -328,7 +445,7 @@ def check_brokers():
     ``site:`` query.
     """
     # A *blank* field is an explicit empty request and must not silently fall
-    # back to whatever was searched earlier -- that would send a previous name
+    # back to whatever was searched earlier: that would send a previous name
     # or email to 8 brokers without the user asking. Only an entirely absent
     # field reuses the last scan, which is the "scan, then deep check" flow.
     submitted = request.form.get("user_info")
@@ -366,7 +483,7 @@ def check_brokers():
     else:
         flash("No broker listings found in the sites we were able to check.", "success")
 
-    return _render_index(user_info=user_info, broker_checks=checks, searched=True)
+    return _render_index(user_info=user_info, broker_checks=checks)
 
 
 def _broker_by_id(broker_id):
@@ -446,7 +563,7 @@ def signals():
     if result["summary"]["partial"]:
         flash("Some checks could not complete; those are marked 'unknown' below.",
               "warning")
-    return _render_index(signals=result, searched=True)
+    return _render_index(signals=result)
 
 
 @app.route("/username", methods=["POST"])
@@ -473,7 +590,7 @@ def username():
         flash("There was an error checking that username.", "danger")
         return redirect(url_for("index"))
 
-    return _render_index(username_results=results, username_query=handle, searched=True)
+    return _render_index(username_results=results, username_query=handle)
 
 
 # --- Removal-request dashboard ----------------------------------------------

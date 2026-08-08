@@ -3,7 +3,7 @@
 
   Every page extends this so the views cannot drift apart in markup the way
   they had. Note the Content-Security-Policy set in app.py allows
-  `script-src 'self'` and `style-src 'self'` only -- no inline <script> block
+  `script-src 'self'` and `style-src 'self'` only: no inline <script> block
   and no style="..." attribute anywhere in these templates would execute. The
   interactive parts of the UI are therefore built from HTML and CSS alone
   (details/summary, :checked siblings), which also means every one of them
@@ -32,6 +32,20 @@
            {% if active_page == 'legal' %}class="is-active" aria-current="page"{% endif %}>Rights</a>
         <a href="{{ url_for('about') }}"
            {% if active_page == 'about' %}class="is-active" aria-current="page"{% endif %}>About</a>
+        {#
+          The protection state is shown on every page, in both directions. A
+          privacy tool that stays quiet when nothing is protecting it lets the
+          user assume a safety they do not have, which is the one assumption
+          this app must never encourage.
+        #}
+        {% if lock_enabled and active_page != 'login' %}
+          <form method="POST" action="{{ url_for('lock') }}" class="nav-lock">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="lock-pill lock-on" title="{{ protection_explanation }}">Lock</button>
+          </form>
+        {% elif not lock_enabled %}
+          <span class="lock-pill lock-off" title="{{ protection_explanation }}">Unlocked</span>
+        {% endif %}
       </nav>
     </div>
   </header>

@@ -18,11 +18,11 @@ is not a risk worth carrying for zero benefit.
 
 Two kinds of selections are supported by :func:`send_petitions`:
 
-* Any ID the scan returned -- resolved to its URL through ``result_map``.
+* Any ID the scan returned: resolved to its URL through ``result_map``.
   Membership of that map is the test, deliberately: the scanner owns its ID
   format and this module must not encode a guess about it.
-* ``broker_<id>`` -- an entry from the data-broker registry.
-* Any other ID -- a curated service from the optional ``data/services.json``.
+* ``broker_<id>``: an entry from the data-broker registry.
+* Any other ID: a curated service from the optional ``data/services.json``.
 
 Everything degrades gracefully: if a data file is missing or malformed, a
 built-in fallback template is used so petition generation never breaks.
@@ -251,10 +251,10 @@ def send_petitions(
 
     Three ID shapes are recognised:
 
-    * any ID present in ``result_map`` -- a search result, resolved to its URL.
-    * ``broker_<id>``  -- an entry from the data-broker registry, resolved by
+    * any ID present in ``result_map``: a search result, resolved to its URL.
+    * ``broker_<id>``: an entry from the data-broker registry, resolved by
       ``broker_by_id``. This is what the proactive opt-out checklist submits.
-    * anything else    -- a curated entry in ``data/services.json``.
+    * anything else: a curated entry in ``data/services.json``.
 
     Args:
         selected_ids: IDs chosen by the user.

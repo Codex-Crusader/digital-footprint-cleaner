@@ -3,11 +3,11 @@
 Given an email, three independent probes ask *public* endpoints what the wider
 internet already knows about its owner:
 
-* **Gravatar avatar** -- whether an avatar image exists for the address.
-* **Gravatar profile** -- the public profile document, which can expose a real
+* **Gravatar avatar**: whether an avatar image exists for the address.
+* **Gravatar profile**: the public profile document, which can expose a real
   name, employer, location and linked social accounts from an email alone.
   This is the highest-value signal of the three.
-* **GitHub user search** -- accounts that published this address.
+* **GitHub user search**: accounts that published this address.
 
 The single public entry point is :func:`gather_email_signals`. It returns a
 plain dict of strings, lists and dicts that a Jinja template can render
@@ -22,7 +22,7 @@ Honest limits
   the two states differently.
 * Even on a clean run, absence of evidence is not evidence of absence. These
   are three endpoints out of thousands, and GitHub can only find users who
-  chose to make their email public -- most people return zero results.
+  chose to make their email public: most people return zero results.
 * GitHub's search API allows roughly ten unauthenticated requests per minute
   per IP, so ``unknown`` is a routine outcome under any real traffic. Set a
   ``GITHUB_TOKEN`` environment variable to raise that ceiling.
@@ -96,7 +96,7 @@ _GITHUB_SEARCH_URL = "https://api.github.com/search/users"
 
 # Deliberately minimal: one "@", no whitespace, and a dotted domain. This is a
 # sanity check to avoid wasting network calls on obvious junk, *not* an RFC
-# 5322 parser -- writing one of those correctly is a project in itself, and
+# 5322 parser: writing one of those correctly is a project in itself, and
 # adding a dependency for it is not worth it here.
 _EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$")
 
@@ -174,7 +174,7 @@ def _build_client() -> httpx.Client:
 
     Redirects are followed but capped. httpx refuses to dispatch a redirect to
     a non-http(s) scheme and raises instead, which the request helper turns
-    into an ``unknown`` state -- so a hostile ``Location`` header cannot lead us
+    into an ``unknown`` state: so a hostile ``Location`` header cannot lead us
     anywhere dangerous.
     """
     return httpx.Client(
@@ -223,7 +223,7 @@ def _request(
     except (httpx.HTTPError, httpx.InvalidURL) as exc:
         # Log only the static label and the exception *class*. Several httpx
         # exceptions stringify with the full request URL, and the GitHub probe
-        # carries the email in its query string -- formatting the exception
+        # carries the email in its query string: formatting the exception
         # here would leak PII into the logs at WARNING level.
         logger.warning("%s probe failed: %s", label, type(exc).__name__)
         raise EmailSignalError(f"The {label} lookup is currently unavailable.") from exc
@@ -376,8 +376,8 @@ def _probe_profile(client: HttpClient, digest: str) -> Signals:
         return _profile_result(UNKNOWN, "The Gravatar profile response could not be read.")
 
     # Absence is signalled by 404, handled above. A 200 whose body is not the
-    # documented {"entry": [...]} shape is an anomaly -- a proxy, a captive
-    # portal, or an API change -- not evidence that no profile exists. Reporting
+    # documented {"entry": [...]} shape is an anomaly: a proxy, a captive
+    # portal, or an API change: not evidence that no profile exists. Reporting
     # it as "not found" would tell the user they are clean when we never looked.
     if not isinstance(payload, dict) or not isinstance(payload.get("entry"), list):
         return _profile_result(
@@ -441,7 +441,7 @@ def _probe_github(client: HttpClient, email: str) -> Signals:
     raw_items = payload.get("items")
     # A well-formed empty result (total_count 0, items []) is a real "not found".
     # A body missing either field is a malformed response, and must not be
-    # downgraded to an absence claim -- see the Gravatar probe for the same rule.
+    # downgraded to an absence claim: see the Gravatar probe for the same rule.
     if not isinstance(raw_count, int) or not isinstance(raw_items, list):
         return _github_result(
             UNKNOWN, "The GitHub response was not in the expected format."

@@ -139,7 +139,7 @@ def test_one_failing_pass_does_not_lose_the_others(monkeypatch):
 
 
 def test_total_failure_returns_a_report_rather_than_raising(monkeypatch):
-    """An exception here would throw away nothing -- but it would also stop the
+    """An exception here would throw away nothing: but it would also stop the
     caller distinguishing "found nothing" from "could not look"."""
     _patch(monkeypatch, {"": RuntimeError("everything is down")})
     report = scanner.deep_search(PROFILE, depth="standard")

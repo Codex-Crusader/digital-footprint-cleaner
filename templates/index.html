@@ -109,16 +109,16 @@
 
       {#
         Narrowing facts. Scored against the results rather than added to the
-        search query -- see utils/search_plan.py for why appending them to the
+        search query: see utils/search_plan.py for why appending them to the
         query would find less, not more.
       #}
       <details class="narrowing" {% if profile.employer or profile.school or profile.age
                or profile.phone or profile.email or profile.username
                or profile.relatives or profile.aliases %}open{% endif %}>
-        <summary>Narrowing factors <span class="hint">tell namesakes apart &mdash; all optional</span></summary>
+        <summary>Narrowing factors <span class="hint">tell namesakes apart, all optional</span></summary>
         <div class="narrowing-body">
           <p class="hint-block">
-            Never added to the search itself &mdash; extra search terms find
+            Never added to the search itself: extra search terms find
             <em>fewer</em> pages, not more. They are used to judge which results are
             really you, so a different Jane Doe in another state sinks to the bottom
             instead of being reported as your exposure.
@@ -220,7 +220,7 @@
       <div class="panel-body">
         {% if coverage.partial %}
           <p class="note">
-            {{ coverage.failed }} check(s) <strong>could not be completed</strong> &mdash; usually
+            {{ coverage.failed }} check(s) <strong>could not be completed</strong>: usually
             because the search provider throttled us. That is not evidence you are absent
             from those places. Run the scan again in a minute to fill in the gaps.
           </p>
@@ -349,7 +349,7 @@
         <p class="hint-block">
           The name did not appear in the title, description or address of these pages.
           They are kept out of the report above so they cannot inflate the exposure
-          score &mdash; but the name may still be on the page itself, so they are listed
+          score, but the name may still be on the page itself, so they are listed
           rather than discarded.
         </p>
         <ul class="result-list">
@@ -367,9 +367,17 @@
       </details>
     {% endif %}
 
-  {% elif searched and not error %}
+  {#
+    Gated on `coverage`, not on `searched`. Only index() sets coverage, and only
+    after a real web scan, whereas the broker sweep, the email check and the
+    username check all re-render this page with searched=True and no report.
+    Keying the empty state off `searched` made every one of them announce "no
+    web results found", which is the exact conflation the coverage panel exists
+    to prevent: no web search had run at all.
+  #}
+  {% elif coverage and not error %}
     <section class="panel">
-      {% if coverage and coverage.completed == 0 %}
+      {% if coverage.completed == 0 %}
         {#
           Nothing ran. This must never read like a clean result: "we found
           nothing" and "nobody was able to look" mean opposite things to
@@ -379,7 +387,7 @@
         <div class="panel-body">
           <p class="note">
             Not one of the {{ coverage.total }} planned checks completed, so
-            <strong>nothing is known either way</strong> &mdash; this is not a clean result.
+            <strong>nothing is known either way</strong>: this is not a clean result.
             The search provider is most likely rate limiting us. Wait a minute and try
             again, or choose a shallower depth.
           </p>
@@ -389,7 +397,7 @@
         <div class="panel-body">
           <p class="note">
             Nothing surfaced for that search. You can still proactively remove yourself
-            from the major data brokers below &mdash; a general web search does not rank
+            from the major data brokers below: a general web search does not rank
             people-search listings, so absence here is not proof of absence there.
           </p>
         </div>
@@ -442,7 +450,7 @@
         <p class="note">
           Each broker was searched individually with a site-scoped query, which finds
           listing pages a general web search does not rank. <strong>Unknown</strong> means the
-          check could not complete &mdash; it is not evidence you are absent.
+          check could not complete: it is not evidence you are absent.
         </p>
       </div>
       <ul class="check-list">
@@ -512,7 +520,7 @@
                     <a class="result-url" href="{{ account.url }}"
                        target="_blank" rel="noopener noreferrer">{{ account.url }}</a>
                   {% else %}
-                    <span class="snippet">(link withheld &mdash; not a safe web address)</span>
+                    <span class="snippet">(link withheld, not a safe web address)</span>
                   {% endif %}
                 </div>
               </li>
@@ -545,7 +553,7 @@
       <div class="panel-head"><h2>Profiles matching &ldquo;{{ username_query }}&rdquo;</h2></div>
       <div class="panel-body">
         <p class="note">
-          A match means a public profile page exists at that address &mdash; not necessarily
+          A match means a public profile page exists at that address, not necessarily
           that it is yours. <strong>Unknown</strong> means the platform blocked or throttled the
           check, so nothing can be concluded either way.
         </p>

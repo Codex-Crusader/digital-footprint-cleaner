@@ -3,11 +3,11 @@
 
 Two public entry points:
 
-* :func:`find_footprint` -- the broad scan. Validates the query, performs the
+* :func:`find_footprint`: the broad scan. Validates the query, performs the
   search, and returns a list of *sanitised* result dictionaries. Results whose
   URL is not a plain ``http``/``https`` link are dropped so nothing unsafe is
   ever handed back to the template layer.
-* :func:`check_brokers` (and :func:`check_broker`) -- targeted, site-scoped
+* :func:`check_brokers` (and :func:`check_broker`): targeted, site-scoped
   searches against known data brokers.
 
 The second exists because of a real weakness in the first: a general web search
@@ -51,8 +51,8 @@ MAX_RESULTS = 10
 SINGLE_SEARCH_BUDGET_SECONDS = 20.0
 
 # --- Global rate governor ----------------------------------------------------
-# Every upstream search in this module -- deep-scan pass, broker check, plain
-# scan -- passes through one gate before it is issued.
+# Every upstream search in this module: deep-scan pass, broker check, plain
+# scan: passes through one gate before it is issued.
 #
 # This is the mechanism that keeps "search deeper" from turning into "show more
 # errors". The two goals are in direct tension: more passes means more requests
@@ -62,7 +62,7 @@ SINGLE_SEARCH_BUDGET_SECONDS = 20.0
 # exactly the moment the backend is asking everyone to slow down.
 #
 # One shared gate fixes that. It enforces a minimum interval between request
-# starts and a ceiling on concurrency, and -- crucially -- it widens that
+# starts and a ceiling on concurrency, and, crucially, it widens that
 # interval automatically when the backend signals throttling, then narrows it
 # again as requests start succeeding. Callers do not opt in or coordinate; they
 # cannot, because the whole point is that the limit is global.
@@ -117,7 +117,7 @@ def _note_success() -> None:
 def _acquire_slot(deadline: float) -> bool:
     """Wait for permission to issue one upstream search.
 
-    Returns ``False`` -- without sleeping out the remaining time -- when the
+    Returns ``False``, without sleeping out the remaining time, when the
     wait would push past ``deadline``. That is what lets a plan degrade into
     "these passes ran, these were skipped" instead of hanging: a caller that
     cannot get a slot in time reports the pass as skipped and moves on.
@@ -182,7 +182,7 @@ def _run_search(query: str, max_results: int, deadline: float) -> list[dict]:
             raw = list(ddgs.text(query=query, max_results=max_results))
     except Exception as exc:  # noqa: BLE001 - normalise any backend failure
         # Log the exception *type* only. Backend exceptions frequently stringify
-        # with the full request URL, which embeds the search terms -- i.e. the
+        # with the full request URL, which embeds the search terms: i.e. the
         # user's name or email. Full detail stays at debug level.
         if _looks_throttled(exc):
             _note_throttled()
@@ -304,7 +304,7 @@ def _cached_status(cache_key):
 
 
 def _store_status(cache_key, status):
-    """Cache a broker status. 'unknown' is not cached -- it is not an answer."""
+    """Cache a broker status. 'unknown' is not cached: it is not an answer."""
     if status == "unknown":
         return
     with _broker_cache_lock:
@@ -386,7 +386,7 @@ def check_brokers(
     Only the first ``max_checks`` brokers are attempted. The rest come back as
     ``"skipped"`` rather than being silently dropped, so the UI can say plainly
     how much of the list was actually covered. Any broker still in flight when
-    ``budget_seconds`` expires is reported as ``"unknown"`` -- a slow backend
+    ``budget_seconds`` expires is reported as ``"unknown"``: a slow backend
     must never hold a web request open indefinitely.
 
     Honest caveat about the deadline: it bounds how long the *caller* waits, not
@@ -555,7 +555,7 @@ def _run_pass(search_pass: SearchPass, deadline: float) -> tuple[PassOutcome, li
                 group=search_pass.group,
                 status=PASS_SKIPPED if skipped else PASS_FAILED,
                 detail=(
-                    "Not attempted -- the scan ran out of time."
+                    "Not attempted: the scan ran out of time."
                     if skipped
                     else "The search service did not answer this one."
                 ),
@@ -614,7 +614,7 @@ def deep_search(
     """Run the whole search plan for ``profile`` and merge what comes back.
 
     Never raises for a backend problem. A deep scan makes many requests and some
-    of them *will* fail -- that is the normal case, not the exceptional one. An
+    of them *will* fail: that is the normal case, not the exceptional one. An
     exception would throw away the passes that did succeed, so failures are
     recorded per pass in :attr:`DeepSearchReport.outcomes` and the caller shows
     coverage alongside results.
@@ -681,7 +681,7 @@ def deep_search(
                 label=p.label,
                 group=p.group,
                 status=PASS_SKIPPED,
-                detail="Not attempted -- the scan ran out of time.",
+                detail="Not attempted: the scan ran out of time.",
             ),
         )
         for p in plan

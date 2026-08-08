@@ -138,7 +138,7 @@ def test_check_broker_ignores_unsafe_urls(monkeypatch):
 
 def test_check_broker_returns_unknown_on_backend_failure(monkeypatch):
     _patch_recording(monkeypatch, raise_exc=RuntimeError("429 rate limited"))
-    # Crucially not "not_listed" -- a failed check is not evidence of absence.
+    # Crucially not "not_listed": a failed check is not evidence of absence.
     assert scanner.check_broker("Jane Doe", "spokeo.com") == "unknown"
 
 

@@ -2,7 +2,7 @@
 
 A name on its own is a bad identifier. "James Smith" matches tens of thousands
 of people, and a search for it returns a pile of results belonging to strangers.
-The fix is not a longer query -- see below -- it is collecting a handful of
+The fix is not a longer query, see below, it is collecting a handful of
 *corroborating facts* and using them to judge which results actually belong to
 the person being searched for.
 
@@ -13,7 +13,7 @@ the person being searched for.
   Broker listings and directories are inconsistent about name order and middle
   names, so one spelling misses listings that plainly exist.
 * :meth:`IdentityProfile.factors` produces matchable :class:`Factor` objects --
-  employer, city, school, phone, birth year, relatives -- that
+  employer, city, school, phone, birth year, relatives: that
   :mod:`analysis` scores each result against.
 
 **Why factors are never appended to the query.** It is tempting to search
@@ -137,15 +137,15 @@ class NameParts:
 def split_name(full_name: str) -> NameParts:
     """Split ``full_name`` into given / middle / family / suffix.
 
-    Handles the two forms people actually type -- ``"Jane Marie Doe"`` and
-    ``"Doe, Jane Marie"`` -- plus multi-word family names held together by a
+    Handles the two forms people actually type: ``"Jane Marie Doe"`` and
+    ``"Doe, Jane Marie"``: plus multi-word family names held together by a
     particle ("Jane van der Berg").
     """
     cleaned = re.sub(r"\s+", " ", (full_name or "").strip())
     if not cleaned:
         return NameParts()
 
-    # "Doe, Jane Marie" -- the part before the comma is the family name.
+    # "Doe, Jane Marie": the part before the comma is the family name.
     if "," in cleaned:
         family_part, _, rest = cleaned.partition(",")
         tokens = rest.split()
@@ -216,7 +216,7 @@ def _phone_patterns(value: str) -> tuple["re.Pattern[str]", ...]:
     if len(digits) == 10:
         area, exchange, line = digits[:3], digits[3:6], digits[6:]
         # One pattern covering (555) 123-4567, 555-123-4567, 555.123.4567,
-        # 555 123 4567 and 5551234567 -- the separators sites vary between.
+        # 555 123 4567 and 5551234567: the separators sites vary between.
         spellings = (
             rf"\(?{area}\)?[-.\s]?{exchange}[-.\s]?{line}",
         )
@@ -240,7 +240,7 @@ class IdentityProfile:
     """The person being searched for, plus every fact known to narrow them down.
 
     Only :attr:`full_name` is required. Every other field is optional and simply
-    makes the confidence scoring sharper -- the tool must stay useful for
+    makes the confidence scoring sharper: the tool must stay useful for
     someone who knows nothing but a name.
     """
 
@@ -313,7 +313,7 @@ class IdentityProfile:
 
         This is the spelling to scope a site search to. Someone who types
         "Jane Marie Doe" is not listed that way on LinkedIn or Instagram --
-        those profiles read "Jane Doe" -- and ``site:linkedin.com "Jane Marie
+        those profiles read "Jane Doe": and ``site:linkedin.com "Jane Marie
         Doe"`` therefore returns nothing while the profile sits there in plain
         sight. Broad searches still use the full name as typed; only the
         scoped passes fall back to this.
@@ -328,7 +328,7 @@ class IdentityProfile:
 
         Deliberately short. Each variant costs one upstream request against a
         backend that throttles, so this returns the spellings that genuinely
-        surface different listings -- not every permutation that exists.
+        surface different listings: not every permutation that exists.
         """
         parts = self.parts
         variants: list[str] = []
@@ -348,7 +348,7 @@ class IdentityProfile:
             # form "Doe, Jane" would otherwise never have the natural spelling
             # searched at all.
             add(f"{parts.given} {parts.family}")
-            # "Doe, Jane" -- how directories and public records index people.
+            # "Doe, Jane": how directories and public records index people.
             add(f"{parts.family}, {parts.given}")
             if parts.middles:
                 # Middle initial only, the other common listing form.
@@ -367,7 +367,7 @@ class IdentityProfile:
         Weights encode how much a match narrows the field. A phone number or an
         email address is effectively unique to one person; an employer or a
         school is shared by thousands; a city is shared by millions. The name
-        itself is *not* a factor -- every result matches it by construction, so
+        itself is *not* a factor: every result matches it by construction, so
         counting it would inflate every score equally and distinguish nothing.
         """
         found: list[Factor] = []

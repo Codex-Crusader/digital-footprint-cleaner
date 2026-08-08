@@ -1,6 +1,6 @@
 """Local tracking of data-removal requests and their status.
 
-Opting out is not a single action -- it is a slow correspondence with dozens of
+Opting out is not a single action: it is a slow correspondence with dozens of
 companies, and brokers routinely re-list people after three to six months. A
 list of "who did I write to, when, and did they actually do it" is what turns
 this from a one-off scan into something that keeps working.
@@ -15,7 +15,7 @@ exposure plus evidence of their attempts to reduce it. So:
   committed by accident.
 * :func:`purge_all` exists so a user can delete everything in one call, and the
   UI must expose it. A privacy tool that will not forget is a contradiction.
-* No search results, snippets, or scan output are stored -- only the site, the
+* No search results, snippets, or scan output are stored: only the site, the
   request's status, and the user's own notes.
 
 Every function takes an optional ``path`` so tests can point at a temporary
@@ -35,7 +35,7 @@ from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 # What every ``path`` argument below accepts. Spelled out rather than left as
 # ``Any`` so it reaches ``Path()`` and ``sqlite3.connect()`` as a type they
-# actually declare -- ``Any`` silently defeats the check at exactly the boundary
+# actually declare: ``Any`` silently defeats the check at exactly the boundary
 # where a wrong value would be hardest to debug.
 DbPath = Union[str, os.PathLike]
 
@@ -136,7 +136,7 @@ def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
     item = dict(row)
     # A value read back out of SQLite is only Any-typed, and json.loads accepts
     # str/bytes/bytearray. Narrow explicitly rather than trusting the column to
-    # hold what we wrote -- an older schema or a hand-edited database would
+    # hold what we wrote: an older schema or a hand-edited database would
     # otherwise reach json.loads with something it cannot parse.
     stored = item.get("data_types")
     serialised = stored if isinstance(stored, (str, bytes, bytearray)) else "[]"

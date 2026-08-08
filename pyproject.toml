@@ -69,7 +69,7 @@ Issues = "https://github.com/Codex-Crusader/digital-footprint-cleaner/issues"
 ##
 
 # NOTE: pycodestyle does not read pyproject.toml, so its settings live in
-# setup.cfg instead. Do not add a [tool.pycodestyle] section here -- it would be
+# setup.cfg instead. Do not add a [tool.pycodestyle] section here: it would be
 # silently ignored.
 
 [tool.mypy]

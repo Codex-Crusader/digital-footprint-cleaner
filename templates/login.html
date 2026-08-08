@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set active_page = 'login' %}
+{% block title %}Unlock &middot; Digital Footprint Cleaner{% endblock %}
+
+{% block hero %}
+  <div class="page-head">
+    <h1>Locked</h1>
+    <p class="lead">This tool holds a record of your exposure. Enter the passcode to continue.</p>
+  </div>
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    <p class="flash flash-danger">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('login') }}" class="panel panel-narrow">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="panel-head"><h2>Passcode</h2></div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="passcode">Passcode</label>
+        {#
+          type="password" so the value is not shown on screen and browsers do
+          not offer to remember it as ordinary text. autocomplete tells a
+          password manager this is an existing credential, not a new one.
+        #}
+        <input type="password" id="passcode" name="passcode" required autofocus
+               autocomplete="current-password" maxlength="256">
+      </div>
+      <button type="submit" class="btn btn-primary">Unlock</button>
+      <p class="hint">
+        Attempts are limited. If you have forgotten the passcode, change
+        <code>DFC_PASSCODE</code> in the environment and restart the app.
+      </p>
+    </div>
+  </form>
+{% endblock %}

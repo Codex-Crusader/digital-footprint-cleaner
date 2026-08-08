@@ -69,7 +69,7 @@ htmlcov/
 *.key
 
 # Database files. The removal-request tracker lives in instance/tracker.sqlite3
-# and records which sites you asked to be removed from -- personal data that
+# and records which sites you asked to be removed from: personal data that
 # must never be committed. `instance/` is ignored above; these are belt-and-braces.
 *.csv
 *.db

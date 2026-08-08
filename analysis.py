@@ -137,7 +137,7 @@ def classify(url):
 # This is the half of the problem a search engine does not solve. Searching
 # "James Smith" returns pages about hundreds of different James Smiths, and a
 # privacy tool that presents them as one person's footprint is worse than
-# useless -- it invites someone to file removal requests over a stranger's data,
+# useless: it invites someone to file removal requests over a stranger's data,
 # and it inflates their exposure score with records that were never theirs.
 #
 # The narrowing facts the user supplies are applied here rather than in the
@@ -179,8 +179,8 @@ def _haystack(result):
 
     The URL is included twice over: once verbatim, and once with its separators
     turned into spaces. Identifying facts are frequently in the path rather than
-    the text -- ``/Jane-Doe/TX/Austin`` names a city that appears nowhere in the
-    title or snippet -- but the word-boundary patterns in
+    the text: ``/Jane-Doe/TX/Austin`` names a city that appears nowhere in the
+    title or snippet: but the word-boundary patterns in
     :mod:`utils.identity` cannot see through a hyphen.
     """
     url = result.get("url", "") or ""
@@ -209,7 +209,7 @@ def score_match(result, profile):
 
     Name presence acts as a floor, not a bonus. A page that names neither the
     full name nor the surname is ranked ``unverified`` no matter how many other
-    facts happen to appear on it -- on a page about a company, the employer and
+    facts happen to appear on it: on a page about a company, the employer and
     city will both match while the person is entirely absent.
     """
     if profile is None or not profile.has_name:
@@ -255,7 +255,7 @@ def analyze(results, profile=None):
         profile: optional :class:`~utils.identity.IdentityProfile`. When given,
             every result is scored for whether it is actually this person and
             the report gains a confidence breakdown. When omitted, behaviour is
-            exactly as before -- the tool stays fully usable for someone who
+            exactly as before: the tool stays fully usable for someone who
             supplies nothing but a name.
 
     Returns a dict with:
@@ -265,7 +265,7 @@ def analyze(results, profile=None):
         total: number of results analysed
         confidence_counts: how many results landed in each band
         unverified: results whose page never names the subject, split out so
-            they can be shown separately rather than deleted -- a name absent
+            they can be shown separately rather than deleted: a name absent
             from the snippet is sometimes present on the page itself.
     """
     grouped = defaultdict(list)
@@ -292,7 +292,7 @@ def analyze(results, profile=None):
 
         if confidence == CONFIDENCE_UNVERIFIED:
             # Kept out of the categories so the main report stays trustworthy,
-            # but never silently dropped -- see the docstring.
+            # but never silently dropped: see the docstring.
             unverified.append(item)
             continue
 

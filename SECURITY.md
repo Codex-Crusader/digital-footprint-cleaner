@@ -36,8 +36,8 @@ The removal tracker (`/dashboard`) writes to a local SQLite database at
 
 * It stores site names, request status, and the user's own notes. It does **not**
   store search results or scan output.
-* That is still sensitive — it is a record of someone's exposure and their
-  attempts to reduce it — so the file is gitignored twice over (`instance/` and
+* That is still sensitive: it is a record of someone's exposure and their
+  attempts to reduce it: so the file is gitignored twice over (`instance/` and
   `*.sqlite3`) and never leaves the machine.
 * The dashboard exposes a one-click **Delete All Tracked Requests** action.
 * All SQL uses bound parameters. Each call opens and closes its own connection,

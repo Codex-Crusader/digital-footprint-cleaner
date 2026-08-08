@@ -551,9 +551,13 @@ def test_large_scan_survives_the_send_round_trip(client, csrf_token, monkeypatch
     scan = client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
     assert scan.status_code == 200
 
-    # The cookie must stay small: it carries a token, not the map.
+    # The cookie carries a token, not the map. Asserting the URL is absent
+    # rather than that the cookie is short: a length check passes vacuously
+    # when the response sets no cookie at all, which is exactly the case a
+    # regression here would produce.
     cookie = scan.headers.get("Set-Cookie", "")
-    assert len(cookie) < 1000, "session cookie is carrying the result map again"
+    assert "example-119.com" not in cookie
+    assert "deep_119" not in cookie
 
     resp = client.post(
         "/send",
@@ -628,3 +632,36 @@ def test_no_inline_script_or_style_survives_the_csp(client):
         html = client.get(path).data.decode().lower()
         assert "<script" not in html, path
         assert 'style="' not in html, path
+
+
+def test_probe_routes_never_claim_a_web_scan_found_nothing(client, csrf_token, monkeypatch):
+    """The empty state belongs to the web scan and to nothing else.
+
+    /check-brokers, /signals and /username all re-render the scan page without
+    a report. Keying the "no web results found" panel off a generic `searched`
+    flag made every one of them announce that a web search had come back empty
+    when no web search had run: the same conflation of "found nothing" with
+    "did not look" that the coverage panel exists to prevent.
+    """
+    monkeypatch.setattr(app_module.scanner, "check_brokers", _fake_checks)
+    monkeypatch.setattr(app_module.email_signals, "gather_email_signals", _fake_signals)
+    monkeypatch.setattr(app_module.username_check, "check_username", _fake_username_results)
+
+    posts = [
+        ("/check-brokers", {"user_info": "Jane Doe"}),
+        ("/signals", {"email": "jane@example.com"}),
+        ("/username", {"username": "janedoe"}),
+    ]
+    for path, data in posts:
+        app_module.reset_rate_limiter()
+        resp = client.post(path, data={**data, "csrf_token": csrf_token})
+        assert resp.status_code == 200, path
+        assert b"No web results found" not in resp.data, path
+        assert b"absence here is not proof" not in resp.data, path
+
+
+def test_scan_with_no_results_still_shows_the_empty_state(client, csrf_token, monkeypatch):
+    # The other half of the above: the panel must still appear where it belongs.
+    _patch_scan(monkeypatch)
+    resp = client.post("/", data={"user_info": "Nobody", "csrf_token": csrf_token})
+    assert b"No web results found" in resp.data

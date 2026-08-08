@@ -62,7 +62,7 @@ def test_expired_entries_do_not_linger_in_memory():
 
 def test_session_count_is_capped():
     # Without a cap, a crawler hitting the search endpoint grows this map
-    # without limit -- a slow memory-exhaustion bug.
+    # without limit: a slow memory-exhaustion bug.
     store = ResultStore(max_sessions=3)
     for _ in range(10):
         store.put({"deep_0": "https://example.com/a"})

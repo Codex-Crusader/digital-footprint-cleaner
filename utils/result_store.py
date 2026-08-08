@@ -9,7 +9,7 @@ cookies, browsers cap a cookie at roughly 4KB, and Werkzeug's response to an
 oversized one is a warning on the server and silent truncation at the browser.
 The failure that produces is nasty precisely because it is quiet: the scan looks
 fine, the user ticks twenty sites, and the petition step reports it could not
-generate anything -- with nothing anywhere saying why.
+generate anything: with nothing anywhere saying why.
 
 **Why in memory and not on disk.** :mod:`utils.tracker` states plainly that no
 search results, snippets or scan output are ever written to disk, because a scan
@@ -20,7 +20,7 @@ carries nothing but an opaque token.
 
 The trade-off, stated as plainly as the rate limiter states its own: this is
 per-process. Under multiple workers a request can land on a worker that never
-saw the scan, and the user is asked to search again -- the same failure mode the
+saw the scan, and the user is asked to search again: the same failure mode the
 old cookie had when the session expired, and handled by the same message. A
 multi-worker deployment wanting better should put a shared cache behind this
 class's three methods.
@@ -37,7 +37,7 @@ from typing import Dict, Mapping, Optional, Tuple
 DEFAULT_TTL_SECONDS = 30 * 60
 
 # Hard cap on retained scans. Without it, a crawler hitting the search endpoint
-# would grow this map without limit -- a slow memory exhaustion bug.
+# would grow this map without limit: a slow memory exhaustion bug.
 DEFAULT_MAX_SESSIONS = 250
 
 # Cap on entries in a single scan's map, mirroring the scanner's own result cap.
@@ -113,8 +113,8 @@ class ResultStore:
         """Return the stored map for ``token``, or an empty map.
 
         An empty map is returned for an unknown, expired or malformed token
-        alike. The caller cannot act on the difference -- every case means
-        "ask the user to run the search again" -- and collapsing them here
+        alike. The caller cannot act on the difference: every case means
+        "ask the user to run the search again": and collapsing them here
         keeps that decision in one place.
         """
         if not isinstance(token, str) or not token:

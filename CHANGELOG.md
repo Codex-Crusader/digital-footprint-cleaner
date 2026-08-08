@@ -61,7 +61,7 @@ honest about: general web search does not rank data-broker listing pages.
 
 - **Rate limiting is now cost-weighted.** Endpoints are no longer equal: a plain
   search costs 1 token, but a broker sweep costs 8, a username check 12 and an
-  email check 3 — roughly one token per upstream request. The username cost is
+  email check 3: roughly one token per upstream request. The username cost is
   derived from the platform registry at import rather than hardcoded, so it
   cannot silently drift below the real fan-out. The default budget rose from 10
   to 30 to suit. Without this, one client could drain the upstream
@@ -82,7 +82,7 @@ honest about: general web search does not rank data-broker listing pages.
   leaving the app on its built-in fallbacks. Documented, and the new template
   file is now explicitly re-included.
 - `send_petitions` routed every non-`duck_*` ID through `data/services.json`,
-  which does not exist — so selecting a broker would have generated nothing at
+  which does not exist: so selecting a broker would have generated nothing at
   all. Broker IDs now resolve against the broker registry.
 - Removed the unused `beautifulsoup4` dependency (nothing imported `bs4`), and
   declared `httpx`, which was previously used only transitively via `ddgs`.
@@ -111,8 +111,8 @@ honest about: general web search does not rank data-broker listing pages.
 - Every new `POST` route (`/check-brokers`, `/signals`, `/username`, and the
   three `/dashboard/*` routes) is covered by the existing CSRF protection, with
   a parametrised test asserting it for each.
-- URLs taken from Gravatar profile data are attacker-influenced — any user can
-  put arbitrary links in their own public profile — so they are validated before
+- URLs taken from Gravatar profile data are attacker-influenced: any user can
+  put arbitrary links in their own public profile: so they are validated before
   being rendered. An account whose URL fails validation is still disclosed to
   the user, but without a clickable link.
 - Remote images are never embedded, only linked, so viewing a report does not

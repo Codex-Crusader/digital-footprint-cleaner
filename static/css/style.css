@@ -1,5 +1,5 @@
 /*
- * Digital Footprint Cleaner -- stylesheet.
+ * Digital Footprint Cleaner: stylesheet.
  *
  * This is a tool, not a landing page, and it is styled like one: dense rows,
  * hairline rules instead of floating cards, near-square corners, and monospace
@@ -10,7 +10,7 @@
  *
  * 1. COLOUR IS RESERVED FOR STATUS. The interface is greyscale. Red means
  *    exposed, amber means the check could not be completed, green means checked
- *    and clear -- and nothing else in the UI is allowed to use those hues. A
+ *    and clear: and nothing else in the UI is allowed to use those hues. A
  *    decorative accent competing with them is how an amber "unknown" starts
  *    reading as ordinary chrome, and telling someone they are clear when nobody
  *    could look is the worst thing this tool can do. Match confidence is
@@ -332,6 +332,10 @@ select:focus {
 
 input::placeholder { color: var(--faint); }
 
+/* Native controls take their fill from `color-scheme` (declared on :root), not
+   from these tokens, so both must track the OS setting together: they do, via
+   the same prefers-color-scheme query. Forcing one without the other renders
+   dark radios on a light page. */
 input[type="checkbox"],
 input[type="radio"] { accent-color: var(--ink); }
 
@@ -804,7 +808,7 @@ details.unverified .result-list { border-top: 1px solid var(--line); }
 .check-pass-ok .check-status,
 .check-pass-empty .check-status { color: var(--clear); }
 
-/* Could not be determined -- never styled as a pass. */
+/* Could not be determined: never styled as a pass. */
 .check-unknown,
 .check-pass-failed { border-left-color: var(--unknown); background: var(--unknown-bg); }
 .check-unknown .check-status,
@@ -1001,4 +1005,41 @@ details.unverified .result-list { border-top: 1px solid var(--line); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* --- Protection state ------------------------------------------------------ */
+/* Shown in the header on every page. "Unlocked" uses the amber "could not be
+   verified" colour rather than red: no passcode is a configuration choice, not
+   a breach, but it must not read as a pass either. */
+
+.nav-lock { display: flex; align-items: center; }
+
+.lock-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: default;
+}
+
+.lock-on { cursor: pointer; }
+.lock-on:hover { border-color: var(--ink); color: var(--ink); }
+
+.lock-off { border-color: var(--unknown); color: var(--unknown); }
+
+.panel-narrow { max-width: 420px; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 4px;
 }

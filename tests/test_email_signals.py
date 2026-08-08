@@ -44,8 +44,8 @@ class _FakeResponse:
 # hostname plus a path rule.
 #
 # This deliberately does not test `"api.github.com" in url`. Substring matching
-# on a URL is a well-known sanitisation bug -- "https://evil.example/
-# api.github.com" contains that string too -- and CodeQL flags it even in tests,
+# on a URL is a well-known sanitisation bug: "https://evil.example/
+# api.github.com" contains that string too: and CodeQL flags it even in tests,
 # correctly, because a fake that matches loosely can quietly route a request to
 # the wrong probe and make a test pass for the wrong reason.
 _ROUTE_MATCHERS = {
@@ -232,7 +232,7 @@ def test_hostile_account_url_is_rejected():
     signals = gather_email_signals(EMAIL, client=client)
     profile = signals["profile"]
 
-    # The account is still reported -- the user should learn it exists -- but
+    # The account is still reported, the user should learn it exists, but
     # with no link, so the template cannot render the payload as an href.
     assert profile["accounts"][0]["domain"] == "evil.example"
     assert profile["accounts"][0]["url"] is None
@@ -380,7 +380,7 @@ def test_summary_counts_mixed_states():
 
 def test_default_client_is_configured_defensively():
     # Constructing a client opens no connection, and the context manager closes
-    # it -- a leak would surface as a ResourceWarning, which pytest.ini escalates
+    # it: a leak would surface as a ResourceWarning, which pytest.ini escalates
     # to an error. This is the only test that touches the production default.
     with email_signals._build_client() as client:
         assert client.timeout.connect == email_signals.CONNECT_TIMEOUT_SECONDS

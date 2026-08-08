@@ -2,7 +2,7 @@
 
 A single web search for a name is a shallow instrument. It returns whatever one
 ranking algorithm considers the ten best pages for that string, which in
-practice means a couple of social profiles and a lot of noise -- and it
+practice means a couple of social profiles and a lot of noise: and it
 systematically misses the listings that matter most, because people-search and
 directory pages rank poorly for bare names.
 
@@ -15,7 +15,7 @@ Two rules govern the plan:
 
 **Queries stay high-recall.** Every term added to a query is an AND against a
 full-text index. ``"Jane Doe" Austin Initech "Staff Engineer" 1985`` matches
-nothing at all. The narrowing facts therefore never enter the query -- they are
+nothing at all. The narrowing facts therefore never enter the query: they are
 scored against the results afterwards (see :mod:`utils.identity`). Location is
 the sole exception, because a city name genuinely improves retrieval for a
 common name rather than destroying it, and even then it gets its own pass so a
@@ -25,7 +25,7 @@ bad location never suppresses the plain-name results.
 the profile that a general search buries on page four. The cost is one request
 per site against a backend that throttles, which is why the plan is tiered:
 :data:`DEPTHS` lets the caller trade coverage against the odds of being rate
-limited. This module is pure -- it builds query strings and nothing else -- so
+limited. This module is pure, it builds query strings and nothing else, so
 the whole plan is unit-testable without touching the network.
 """
 
@@ -110,7 +110,7 @@ class SearchPass:
         group: which section of the plan this belongs to, for grouped display.
         max_results: how many results to request.
         category_hint: the category a hit most likely belongs to. Used only as a
-            fallback -- :func:`analysis.classify` decides from the actual URL,
+            fallback: :func:`analysis.classify` decides from the actual URL,
             which is authoritative. A site-scoped pass can still return a
             redirect or an off-site page.
     """
@@ -204,7 +204,7 @@ def build_plan(profile: IdentityProfile, depth: str = DEFAULT_DEPTH) -> tuple[Se
         )
     )
 
-    # 3. Alternative spellings -- "Doe, Jane" is how directories index people.
+    # 3. Alternative spellings: "Doe, Jane" is how directories index people.
     for index, variant in enumerate(variants[1:], start=1):
         passes.append(
             SearchPass(
@@ -251,7 +251,7 @@ def plan_size(profile: IdentityProfile, depth: str = DEFAULT_DEPTH) -> int:
     """How many upstream requests a plan will make.
 
     Exists so the rate limiter can charge a deep scan what it actually costs.
-    Deriving the figure from the plan -- rather than hardcoding one -- keeps the
+    Deriving the figure from the plan, rather than hardcoding one, keeps the
     charge correct when the tiers above change, in the same way the username
     check derives its cost from the platform registry.
     """
