@@ -14,9 +14,16 @@
     <p class="flash flash-danger">{{ error }}</p>
   {% endif %}
 
-  <form method="POST" action="{{ url_for('login') }}" class="panel panel-narrow">
+  {#
+    `next` is carried on the form action, not just on the incoming link. Posting
+    to a bare url_for('login') drops the query string, so the user would be sent
+    to the home page instead of the page they originally asked for. It is
+    re-validated server-side by _safe_next.
+  #}
+  <form method="POST" action="{{ url_for('login', next=request.args.get('next')) }}"
+        class="panel panel-narrow">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="panel-head"><h2>Passcode</h2></div>
+    <div class="panel-head"><h2>Unlock this app</h2></div>
     <div class="panel-body">
       <div class="field">
         <label for="passcode">Passcode</label>

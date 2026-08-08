@@ -310,3 +310,21 @@ def test_request_from_localhost_is_served(client):
 def test_static_files_are_also_host_checked(client):
     resp = client.get("/static/css/style.css", headers={"Host": "evil.example"})
     assert resp.status_code == 403
+
+
+def test_login_returns_you_to_the_page_you_asked_for(locked_client):
+    # Regression: the form posted to a bare /login, dropping ?next, so every
+    # unlock landed on the home page instead of the page originally requested.
+    resp = locked_client.get("/dashboard")
+    location = resp.headers["Location"]
+    assert "next=%2Fdashboard" in location or "next=/dashboard" in location
+
+    page = locked_client.get("/login?next=/dashboard").data.decode()
+    assert "next=%2Fdashboard" in page or "next=/dashboard" in page
+
+    with locked_client.session_transaction() as s:
+        token = s["csrf_token"]
+    resp = locked_client.post(
+        "/login?next=/dashboard", data={"passcode": PASSCODE, "csrf_token": token}
+    )
+    assert resp.headers["Location"].endswith("/dashboard")
