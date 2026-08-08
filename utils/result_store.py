@@ -64,8 +64,18 @@ class ResultStore:
         # token -> (stored_at, {result_id: url})
         self._entries: Dict[str, Tuple[float, Dict[str, str]]] = {}
 
-    def _purge_locked(self, now: float) -> None:
+    def _purge_locked(self, now: float, reserve: int = 0) -> None:
         """Drop expired entries, then the oldest ones if still over capacity.
+
+        ``reserve`` is how many entries the caller is about to add. Purging
+        without it leaves exactly enough room for the current contents and then
+        overshoots the cap by one on every insert.
+
+        Eviction order is dict insertion order rather than the stored
+        timestamp. ``time.time()`` has millisecond-ish resolution on Windows, so
+        several scans within one tick share a timestamp and sorting by it picks
+        an arbitrary victim; :meth:`put` re-inserts on overwrite specifically so
+        that insertion order tracks recency.
 
         Caller must hold the lock.
         """
@@ -73,10 +83,9 @@ class ResultStore:
         for token in expired:
             self._entries.pop(token, None)
 
-        overflow = len(self._entries) - self._max_sessions
+        overflow = len(self._entries) + max(0, reserve) - self._max_sessions
         if overflow > 0:
-            oldest = sorted(self._entries, key=lambda t: self._entries[t][0])[:overflow]
-            for token in oldest:
+            for token in list(self._entries)[:overflow]:
                 self._entries.pop(token, None)
 
     def put(self, mapping: Mapping[str, str], token: Optional[str] = None) -> str:
@@ -93,7 +102,10 @@ class ResultStore:
         }
         now = time.time()
         with self._lock:
-            self._purge_locked(now)
+            # Remove first so the re-insert moves this token to the end, keeping
+            # dict order equal to recency order for eviction.
+            self._entries.pop(token, None)
+            self._purge_locked(now, reserve=1)
             self._entries[token] = (now, trimmed)
         return token
 

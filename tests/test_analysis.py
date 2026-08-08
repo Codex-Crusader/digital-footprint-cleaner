@@ -1,4 +1,7 @@
+from datetime import date
+
 import analysis
+from utils.identity import IdentityProfile
 
 
 def _sample_results():
@@ -116,3 +119,164 @@ def test_registry_all_brokers_loaded_with_https_opt_out():
     for broker in brokers:
         assert broker["opt_out_url"].startswith("https://")
         assert broker["domain"] and "." in broker["domain"]
+
+
+# --- Match confidence -------------------------------------------------------
+# Whether a result is *this* person or a namesake. A privacy tool that presents
+# a stranger's records as the user's invites removal requests over someone
+# else's data and inflates an exposure score with records that were never
+# theirs, so these are the sharpest assertions in the suite.
+
+def _profile(**kwargs):
+    kwargs.setdefault("full_name", "Jane Doe")
+    kwargs.setdefault("_today", date(2026, 8, 8))
+    return IdentityProfile(**kwargs)
+
+
+def _result(url, title="Result", snippet=""):
+    return {"id": "deep_0", "title": title, "url": url, "snippet": snippet}
+
+
+def test_no_profile_leaves_every_result_possible():
+    # The tool must stay fully usable for someone who supplies nothing but a
+    # name, so scoring degrades to a single neutral band rather than refusing.
+    confidence, matched = analysis.score_match(_result("https://example.com"), None)
+    assert confidence == analysis.CONFIDENCE_POSSIBLE
+    assert matched == []
+
+
+def test_two_corroborating_facts_reach_strong():
+    confidence, matched = analysis.score_match(
+        _result("https://linkedin.com/in/janedoe",
+                snippet="Jane Doe - Initech - Austin, Texas"),
+        _profile(location="Austin", employer="Initech"),
+    )
+    assert confidence == analysis.CONFIDENCE_STRONG
+    assert {m["key"] for m in matched} == {"location", "employer"}
+
+
+def test_one_fact_reaches_likely():
+    confidence, _ = analysis.score_match(
+        _result("https://example.com/x", snippet="Jane Doe of Austin"),
+        _profile(location="Austin"),
+    )
+    assert confidence == analysis.CONFIDENCE_LIKELY
+
+
+def test_namesake_without_corroboration_stays_possible():
+    confidence, matched = analysis.score_match(
+        _result("https://www.spokeo.com/Jane-Doe/Ohio",
+                snippet="Jane Doe, age 71, Akron OH"),
+        _profile(location="Austin", employer="Initech"),
+    )
+    assert confidence == analysis.CONFIDENCE_POSSIBLE
+    assert matched == []
+
+
+def test_page_without_the_name_is_unverified_however_many_facts_match():
+    """Name presence is a floor, not a bonus.
+
+    A company's own page matches the employer and the city while the person is
+    entirely absent from it. Without this rule it would score higher than the
+    user's actual profile page.
+    """
+    confidence, matched = analysis.score_match(
+        _result("https://initech.com/austin",
+                title="Initech Austin office",
+                snippet="Our Austin, TX office. Founded 1985."),
+        _profile(location="Austin, TX", employer="Initech", age="40"),
+    )
+    assert confidence == analysis.CONFIDENCE_UNVERIFIED
+    assert matched == []
+
+
+def test_facts_are_matched_from_the_url_path_too():
+    # Identifying details are often only in the path: /Jane-Doe/TX/Austin names
+    # a city that appears in neither the title nor the snippet.
+    confidence, matched = analysis.score_match(
+        _result("https://radaris.com/p/Jane/Doe/Austin-TX/"),
+        _profile(location="Austin"),
+    )
+    assert confidence == analysis.CONFIDENCE_LIKELY
+    assert [m["key"] for m in matched] == ["location"]
+
+
+def test_name_matches_across_a_middle_initial():
+    confidence, _ = analysis.score_match(
+        _result("https://example.com", snippet="Jane M. Doe lives in Austin"),
+        _profile(location="Austin"),
+    )
+    assert confidence != analysis.CONFIDENCE_UNVERIFIED
+
+
+def test_name_matches_the_directory_comma_form():
+    confidence, _ = analysis.score_match(
+        _result("https://example.com", snippet="Doe, Jane - record 12"),
+        _profile(),
+    )
+    assert confidence != analysis.CONFIDENCE_UNVERIFIED
+
+
+# --- analyze() with a profile ----------------------------------------------
+
+
+def test_analyze_without_a_profile_is_unchanged():
+    # Backwards compatibility: the no-profile path must score exactly as before.
+    assert analysis.analyze(_sample_results())["score"] == analysis.analyze(
+        _sample_results(), profile=None
+    )["score"]
+
+
+def test_unverified_results_are_split_out_not_deleted():
+    results = [
+        _result("https://example.com/jane", snippet="Jane Doe of Austin"),
+        {"id": "deep_1", "title": "Unrelated", "url": "https://example.com/other",
+         "snippet": "A page about someone else entirely"},
+    ]
+    report = analysis.analyze(results, profile=_profile(location="Austin"))
+    assert report["total"] == 2
+    assert len(report["unverified"]) == 1
+    assert all(
+        r["confidence"] != analysis.CONFIDENCE_UNVERIFIED
+        for cat in report["categories"] for r in cat["results"]
+    )
+
+
+def test_unverified_results_do_not_inflate_the_exposure_score():
+    matching = [_result("https://www.spokeo.com/Jane-Doe", snippet="Jane Doe, Austin")]
+    padded = matching + [
+        {"id": f"deep_{i}", "title": "Other", "url": f"https://www.radaris.com/p{i}",
+         "snippet": "a completely different person"}
+        for i in range(1, 5)
+    ]
+    profile = _profile(location="Austin")
+    assert (
+        analysis.analyze(padded, profile=profile)["score"]
+        == analysis.analyze(matching, profile=profile)["score"]
+    )
+
+
+def test_results_are_ordered_best_match_first():
+    results = [
+        {"id": "deep_0", "title": "Namesake", "url": "https://www.spokeo.com/a",
+         "snippet": "Jane Doe, Akron OH"},
+        {"id": "deep_1", "title": "Right one", "url": "https://www.spokeo.com/b",
+         "snippet": "Jane Doe, Austin, works at Initech"},
+    ]
+    report = analysis.analyze(results, profile=_profile(location="Austin", employer="Initech"))
+    broker_cat = next(c for c in report["categories"] if c["key"] == "data_broker")
+    assert broker_cat["results"][0]["id"] == "deep_1"
+
+
+def test_confidence_counts_are_reported():
+    report = analysis.analyze(
+        [_result("https://example.com", snippet="Jane Doe of Austin")],
+        profile=_profile(location="Austin"),
+    )
+    assert report["confidence_counts"][analysis.CONFIDENCE_LIKELY] == 1
+    assert report["profiled"] is True
+
+
+def test_profiled_is_false_when_only_a_name_was_given():
+    report = analysis.analyze([_result("https://example.com")], profile=_profile())
+    assert report["profiled"] is False
