@@ -14,7 +14,7 @@ def _patch_scan(monkeypatch, results=(), raises=None, outcomes=None):
     Replaces `scanner.deep_search` rather than a name imported into `app`, so
     the fake sits at the real seam: `app` calls it through the module.
     """
-    def fake(_profile, depth=None, **_kwargs):
+    def fake(_profile, **_kwargs):
         if raises is not None:
             raise raises
         report = scanner.DeepSearchReport(results=[dict(r) for r in results])

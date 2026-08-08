@@ -20,7 +20,7 @@ in a *privacy* tool is worse than no answer at all. Three things make this hard:
   every username; the real answer only appears once JavaScript has run.
 
 Results are therefore **tri-state**: ``found`` / ``not_found`` / ``unknown``
--- and anything ambiguous (403, 429, 5xx, a redirect, a timeout, a connection
+and anything ambiguous (403, 429, 5xx, a redirect, a timeout, a connection
 error, or a 200 we cannot positively confirm) is ``unknown`` with a short
 machine-readable ``reason``, **never** ``not_found``. A platform whose response
 cannot be interpreted honestly is marked ``SIGNAL_UNRELIABLE`` in

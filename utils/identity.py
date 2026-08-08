@@ -12,7 +12,7 @@ the person being searched for.
   worth searching for (``"Jane Doe"``, ``"Doe, Jane"``, ``"Jane M Doe"``, ...).
   Broker listings and directories are inconsistent about name order and middle
   names, so one spelling misses listings that plainly exist.
-* :meth:`IdentityProfile.factors` produces matchable :class:`Factor` objects --
+* :meth:`IdentityProfile.factors` produces matchable :class:`Factor` objects:
   employer, city, school, phone, birth year, relatives: that
   :mod:`analysis` scores each result against.
 
@@ -33,7 +33,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Mapping
 
 from utils.validation import MAX_NAME_LENGTH, MAX_QUERY_LENGTH, clamp_text
 
@@ -270,15 +270,17 @@ class IdentityProfile:
             return clamp_text(form.get(name, ""), limit)
 
         def many(name: str) -> tuple[str, ...]:
+            # getattr on a Mapping yields an untyped value, so the result is
+            # coerced to a concrete list[str] here rather than being assigned
+            # to a Sequence[str] name the checker cannot verify.
             getlist = getattr(form, "getlist", None)
-            raw: Sequence[str]
             if callable(getlist):
-                raw = getlist(name)
+                raw: list[str] = [str(value) for value in getlist(name)]
             else:
-                value = form.get(name, "")
+                text = form.get(name, "")
                 # Fall back to comma-separated entry for plain dict callers and
                 # for a single text input holding several names.
-                raw = value.split(",") if value else []
+                raw = text.split(",") if text else []
             return _clean_list(raw, MAX_NAME_LENGTH)
 
         return cls(
@@ -312,7 +314,7 @@ class IdentityProfile:
         """Given plus family name, with any middle name and suffix dropped.
 
         This is the spelling to scope a site search to. Someone who types
-        "Jane Marie Doe" is not listed that way on LinkedIn or Instagram --
+        "Jane Marie Doe" is not listed that way on LinkedIn or Instagram,
         those profiles read "Jane Doe": and ``site:linkedin.com "Jane Marie
         Doe"`` therefore returns nothing while the profile sits there in plain
         sight. Broad searches still use the full name as typed; only the
@@ -394,10 +396,10 @@ class IdentityProfile:
             # The local part alone is worth matching: sites frequently redact
             # the domain ("jane.doe@...") or list the handle without it.
             local = self.email.partition("@")[0]
-            patterns = [_word_pattern(self.email)]
+            email_patterns = [_word_pattern(self.email)]
             if len(local) >= 4:
-                patterns.append(_word_pattern(local))
-            add("email", "Email address", self.email, 5, patterns)
+                email_patterns.append(_word_pattern(local))
+            add("email", "Email address", self.email, 5, email_patterns)
 
         if self.username and len(self.username) >= 3:
             add("username", "Username", self.username, 4, (_word_pattern(self.username),))

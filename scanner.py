@@ -654,7 +654,7 @@ def deep_search(
 
     # Merge, preserving plan order so the most significant passes' results lead.
     order = {p.key: index for index, p in enumerate(plan)}
-    collected.sort(key=lambda item: order.get(item["pass_key"], len(order)))
+    collected.sort(key=lambda hit: order.get(hit["pass_key"], len(order)))
 
     merged: dict[str, dict] = {}
     for item in collected:

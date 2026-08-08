@@ -200,7 +200,7 @@ def _request(
 
     Args:
         client: the HTTP client to use.
-        url: absolute endpoint URL. Must never contain the email address --
+        url: absolute endpoint URL. Must never contain the email address,
             see the logging note below.
         label: short static probe name used in log messages.
         params: optional query parameters.

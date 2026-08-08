@@ -6,6 +6,8 @@ an expired or unknown token must degrade to "run the search again", never to a
 partial map or an exception.
 """
 
+from typing import Mapping, cast
+
 from utils.result_store import ResultStore
 
 
@@ -106,6 +108,9 @@ def test_returned_map_is_a_copy():
 
 
 def test_keys_and_values_are_coerced_to_strings():
+    # put() declares Mapping[str, str]; this deliberately breaks that contract
+    # to exercise the defensive coercion, hence the cast rather than a plain
+    # wrong-typed literal that would read as a mistake.
     store = ResultStore()
-    token = store.put({1: 2})
+    token = store.put(cast(Mapping[str, str], {1: 2}))
     assert store.get(token) == {"1": "2"}

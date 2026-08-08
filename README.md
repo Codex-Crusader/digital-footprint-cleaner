@@ -35,6 +35,12 @@ plus a per-broker check to confirm whether one lists you:
 
 ![Removal tracker](docs/screenshots/tracker.jpg)
 
+**Passcode lock** (optional). Set `DFC_PASSCODE` and every page requires an
+unlock first. Without it the header says **Unlocked**, so you are never left
+assuming a protection that is not there:
+
+![Passcode lock](docs/screenshots/lock.jpg)
+
 ## Features
 
 - **Deep multi-pass search.** A scan is a *plan* of narrow searches, not one broad

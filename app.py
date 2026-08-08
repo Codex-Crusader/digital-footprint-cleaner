@@ -220,7 +220,7 @@ def login():
     return render_template("login.html", error=error, active_page="login")
 
 
-def _safe_next(target):
+def _safe_next(target: object) -> str:
     """Return a safe same-site redirect target, defaulting to the home page.
 
     Only a path beginning with a single ``/`` is accepted. ``//evil.example``

@@ -29,7 +29,7 @@ class _ScriptedDDGS:
     def __exit__(self, *_exc_info):
         return False
 
-    def text(self, query="", max_results=0, **_kwargs):
+    def text(self, query="", **_kwargs):
         self._calls.append(query)
         for needle, outcome in self._rules.items():
             if needle in query:

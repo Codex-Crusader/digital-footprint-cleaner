@@ -66,34 +66,53 @@ _RECORD_PASSES = (
     ("news", "News mentions", "news", "news_media"),
 )
 
-# Depth presets. The names are what the UI shows; the values cap how much of the
-# plan is built. More passes find more, and also make throttling more likely --
-# an honest trade the user gets to make rather than one made for them.
-DEPTHS: dict[str, dict[str, object]] = {
-    "quick": {
-        "label": "Quick",
-        "description": "Two broad searches. Fastest, least likely to be throttled.",
-        "variants": 1,
-        "social": 0,
-        "extended": 0,
-        "records": 0,
-    },
-    "standard": {
-        "label": "Standard",
-        "description": "Broad searches plus the major social and professional sites.",
-        "variants": 2,
-        "social": 4,
-        "extended": 0,
-        "records": 1,
-    },
-    "deep": {
-        "label": "Deep",
-        "description": "Every name spelling, ten platforms and public-record sweeps.",
-        "variants": 3,
-        "social": 4,
-        "extended": 6,
-        "records": 3,
-    },
+
+@dataclass(frozen=True)
+class DepthPreset:
+    """How much of the plan one depth tier builds.
+
+    A dataclass rather than a dict of ``object``: the caps are read as numbers
+    and the labels as strings, and a plain mapping forced every read through a
+    cast that the type checker could not verify and a reader could not trust.
+    """
+
+    label: str
+    description: str
+    variants: int
+    social: int
+    extended: int
+    records: int
+
+
+# Depth presets. The labels are what the UI shows; the caps decide how much of
+# the plan is built. More passes find more, and also make throttling more
+# likely, which is an honest trade the user gets to make rather than one made
+# for them.
+DEPTHS: dict[str, DepthPreset] = {
+    "quick": DepthPreset(
+        label="Quick",
+        description="Two broad searches. Fastest, least likely to be throttled.",
+        variants=1,
+        social=0,
+        extended=0,
+        records=0,
+    ),
+    "standard": DepthPreset(
+        label="Standard",
+        description="Broad searches plus the major social and professional sites.",
+        variants=2,
+        social=4,
+        extended=0,
+        records=1,
+    ),
+    "deep": DepthPreset(
+        label="Deep",
+        description="Every name spelling, ten platforms and public-record sweeps.",
+        variants=3,
+        social=4,
+        extended=6,
+        records=3,
+    ),
 }
 
 DEFAULT_DEPTH = "standard"
@@ -126,8 +145,8 @@ class SearchPass:
 def _quoted(name: str) -> str:
     """Wrap a name in quotes so the backend treats it as one phrase.
 
-    Unquoted, ``Jane Doe`` matches pages containing "Jane" and "Doe" anywhere --
-    a different Jane and a different Doe on the same page score as a hit.
+    Unquoted, ``Jane Doe`` matches pages containing "Jane" and "Doe" anywhere,
+    so a different Jane and a different Doe on the same page score as a hit.
     Embedded quotes are stripped rather than escaped: the operator has no escape
     syntax, and a stray quote silently truncates the phrase.
     """
@@ -146,8 +165,8 @@ def depth_choices() -> tuple[dict[str, str], ...]:
     return tuple(
         {
             "id": key,
-            "label": str(DEPTHS[key]["label"]),
-            "description": str(DEPTHS[key]["description"]),
+            "label": DEPTHS[key].label,
+            "description": DEPTHS[key].description,
         }
         for key in ("quick", "standard", "deep")
     )
@@ -167,12 +186,8 @@ def build_plan(profile: IdentityProfile, depth: str = DEFAULT_DEPTH) -> tuple[Se
         return ()
 
     settings = DEPTHS[resolve_depth(depth)]
-    variant_limit = int(settings["variants"])  # type: ignore[call-overload]
-    social_limit = int(settings["social"])  # type: ignore[call-overload]
-    extended_limit = int(settings["extended"])  # type: ignore[call-overload]
-    record_limit = int(settings["records"])  # type: ignore[call-overload]
 
-    variants = profile.name_variants()[:variant_limit] or (profile.full_name,)
+    variants = profile.name_variants()[: settings.variants] or (profile.full_name,)
     primary = _quoted(variants[0])
     # Site-scoped and record passes search the given+family spelling instead:
     # a scoped search is an exact match against one site's own index, so an
@@ -217,7 +232,7 @@ def build_plan(profile: IdentityProfile, depth: str = DEFAULT_DEPTH) -> tuple[Se
 
     # 4. Site-scoped platform checks: the part a general search cannot do.
     scoped: Iterable[tuple[str, str, str]] = (
-        list(_SOCIAL_SITES[:social_limit]) + list(_EXTENDED_SITES[:extended_limit])
+        list(_SOCIAL_SITES[: settings.social]) + list(_EXTENDED_SITES[: settings.extended])
     )
     for domain, label, category in scoped:
         passes.append(
@@ -232,7 +247,7 @@ def build_plan(profile: IdentityProfile, depth: str = DEFAULT_DEPTH) -> tuple[Se
         )
 
     # 5. Record-type sweeps, last: the widest net and the noisiest.
-    for key, label, terms, category in _RECORD_PASSES[:record_limit]:
+    for key, label, terms, category in _RECORD_PASSES[: settings.records]:
         passes.append(
             SearchPass(
                 key=f"records_{key}",
