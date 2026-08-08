@@ -122,8 +122,9 @@ def _acquire_slot(deadline: float) -> bool:
     "these passes ran, these were skipped" instead of hanging: a caller that
     cannot get a slot in time reports the pass as skipped and moves on.
 
-    ``deadline`` is a :func:`time.monotonic` timestamp. Pass ``float("inf")``
-    for an ungoverned wait.
+    ``deadline`` is a :func:`time.monotonic` timestamp. It must be finite:
+    ``Semaphore.acquire`` rejects an infinite timeout, and every caller has a
+    budget to respect anyway.
     """
     global _gate_next_at
     remaining = deadline - time.monotonic()

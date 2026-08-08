@@ -17,6 +17,18 @@ from utils import auth
 PASSCODE = "correct horse battery staple"
 
 
+@pytest.fixture(autouse=True)
+def _cheap_kdf(monkeypatch):
+    """Run the key derivation at a token cost for the duration of the suite.
+
+    The real 600k rounds are the point of the algorithm and deliberately slow;
+    paying them once per hashing test took the whole suite from 1s to 8s while
+    proving nothing the structure assertions do not. The production figure is
+    asserted directly in test_kdf_cost_is_high_enough, which does not use this.
+    """
+    monkeypatch.setattr(auth, "_PBKDF2_ROUNDS", 1_000)
+
+
 # --- passcode hashing -------------------------------------------------------
 
 
@@ -53,9 +65,19 @@ def test_malformed_stored_hash_fails_closed(malformed):
 def test_hash_format_is_self_describing():
     algorithm, rounds, salt, digest = auth.hash_passcode(PASSCODE).split("$")
     assert algorithm == "pbkdf2_sha256"
-    assert int(rounds) >= 100_000
+    assert int(rounds) == auth._PBKDF2_ROUNDS
     assert len(bytes.fromhex(salt)) >= 16
     assert len(bytes.fromhex(digest)) == 32
+
+
+def test_kdf_cost_is_high_enough(monkeypatch):
+    """The shipped round count, not whatever the suite patches it down to.
+
+    This is the assertion that would catch someone lowering the cost to speed
+    something up, which is exactly what the fixture above does temporarily.
+    """
+    monkeypatch.undo()
+    assert auth._PBKDF2_ROUNDS >= 100_000
 
 
 # --- host header ------------------------------------------------------------

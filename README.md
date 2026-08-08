@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE_MIT.md)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-000000.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/tests-303%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-362%20passing-brightgreen.svg)](tests/)
 [![Security](https://img.shields.io/badge/security-hardened-1f6feb.svg)](SECURITY.md)
 
 A privacy-first, open-source web app that helps you find where your personal
@@ -257,6 +257,7 @@ digital-footprint-cleaner/
 ├── .env.example            # Documented configuration template
 ├── SECURITY.md             # Security policy & protections
 ├── utils/
+│   ├── auth.py             # Passcode lock, host allowlist, login throttling
 │   ├── identity.py         # Subject profile: name splitting, variants, match factors
 │   ├── search_plan.py      # Builds the deep-search query plan (pure, testable)
 │   ├── result_store.py     # Short-lived in-memory scan results (never on disk)
@@ -271,10 +272,11 @@ digital-footprint-cleaner/
 │   ├── index.html          # Scan, probes, results, petitions
 │   ├── dashboard.html      # Removal-request tracker
 │   ├── legal.html          # Your rights
+│   ├── login.html          # Passcode unlock
 │   └── about.html          # Creator and design notes
 ├── static/
 │   └── css/style.css       # All styling (kept external for a strict CSP)
-├── tests/                  # pytest suite (303 tests)
+├── tests/                  # pytest suite (362 tests)
 ├── data/
 │   ├── brokers.json        # Curated, verified data-broker opt-out registry
 │   └── petition_templates.json  # Legal bases, data types, petition body
