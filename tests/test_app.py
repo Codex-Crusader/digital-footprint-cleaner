@@ -3,6 +3,33 @@
 import pytest
 
 import app as app_module
+import scanner
+from utils import search_plan
+from utils.identity import IdentityProfile
+
+
+def _patch_scan(monkeypatch, results=(), raises=None, outcomes=None):
+    """Make the deep scan return canned results without touching the network.
+
+    Replaces `scanner.deep_search` rather than a name imported into `app`, so
+    the fake sits at the real seam: `app` calls it through the module.
+    """
+    def fake(_profile, depth=None, **_kwargs):
+        if raises is not None:
+            raise raises
+        report = scanner.DeepSearchReport(results=[dict(r) for r in results])
+        report.outcomes = list(outcomes) if outcomes is not None else [
+            scanner.PassOutcome(
+                key="name_exact",
+                label="Exact name",
+                group="broad",
+                status=scanner.PASS_OK if results else scanner.PASS_EMPTY,
+                count=len(results),
+            )
+        ]
+        return report
+
+    monkeypatch.setattr(scanner, "deep_search", fake)
 
 
 # --- Security headers -------------------------------------------------------
@@ -27,7 +54,7 @@ def test_post_with_wrong_token_is_rejected(client):
 
 
 def test_post_with_valid_token_passes(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_args, **_kwargs: [])
+    _patch_scan(monkeypatch)
     resp = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
     assert resp.status_code == 200
 
@@ -36,37 +63,69 @@ def test_post_with_valid_token_passes(client, csrf_token, monkeypatch):
 def test_empty_input_shows_prompt(client, csrf_token):
     resp = client.post("/", data={"user_info": "   ", "csrf_token": csrf_token})
     assert resp.status_code == 200
-    assert b"Please provide your name or email" in resp.data
+    assert b"Please provide a name to search for" in resp.data
 
 
 def test_no_results_message(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_args, **_kwargs: [])
+    _patch_scan(monkeypatch)
     resp = client.post("/", data={"user_info": "Nobody", "csrf_token": csrf_token})
     assert b"No web results found" in resp.data
 
 
-def test_search_error_shows_friendly_message(client, csrf_token, monkeypatch):
-    def boom(*_args, **_kwargs):
-        raise app_module.SearchError("down")
+def test_total_backend_failure_never_reads_as_a_clean_result(client, csrf_token, monkeypatch):
+    """Every pass failing must not render like "we looked and found nothing".
 
-    monkeypatch.setattr(app_module, "find_footprint", boom)
+    This is the most consequential thing this UI can get wrong. A throttled
+    sweep and a genuinely clean footprint both produce zero results; if the page
+    cannot tell them apart, it tells someone their data is not exposed at a
+    moment when nobody actually managed to look.
+    """
+    _patch_scan(
+        monkeypatch,
+        outcomes=[
+            scanner.PassOutcome(key="name_exact", label="Exact name", group="broad",
+                                status=scanner.PASS_FAILED, detail="backend down"),
+            scanner.PassOutcome(key="site_x_com", label="X / Twitter", group="platforms",
+                                status=scanner.PASS_FAILED, detail="backend down"),
+        ],
+    )
     resp = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
-    assert b"temporarily unavailable" in resp.data
+    assert resp.status_code == 200
+    assert b"No web results found" not in resp.data
+    assert b"could not be completed" in resp.data
+
+
+def test_partial_coverage_is_reported_alongside_results(client, csrf_token, monkeypatch):
+    _patch_scan(
+        monkeypatch,
+        results=[{"id": "deep_0", "title": "Profile",
+                  "url": "https://example.com/jane", "snippet": ""}],
+        outcomes=[
+            scanner.PassOutcome(key="name_exact", label="Exact name", group="broad",
+                                status=scanner.PASS_OK, count=1),
+            scanner.PassOutcome(key="site_x_com", label="X / Twitter", group="platforms",
+                                status=scanner.PASS_FAILED, detail="throttled"),
+        ],
+    )
+    resp = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
+    assert b"1 of 2" in resp.data
+
+
+def test_unexpected_scan_error_shows_friendly_message(client, csrf_token, monkeypatch):
+    _patch_scan(monkeypatch, raises=RuntimeError("boom"))
+    resp = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
+    assert b"error processing your request" in resp.data
 
 
 def test_broker_result_shows_exposure_and_opt_out(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(
-        app_module,
-        "find_footprint",
-        lambda *_args, **_kwargs: [
+    _patch_scan(monkeypatch, results=[
             {
                 "id": "duck_0",
                 "title": "Jane Doe - Spokeo",
                 "url": "https://www.spokeo.com/Jane-Doe",
                 "snippet": "address, phone",
             }
-        ],
-    )
+        ])
     resp = client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
     assert b"exposure" in resp.data
     assert b"data brokers" in resp.data
@@ -74,7 +133,7 @@ def test_broker_result_shows_exposure_and_opt_out(client, csrf_token, monkeypatc
 
 
 def test_broker_checklist_shows_scoped_check_link_after_scan(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_args, **_kwargs: [])
+    _patch_scan(monkeypatch)
     resp = client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
     # A scoped DuckDuckGo "Check" link is generated per broker so the user can
     # confirm whether a broker actually lists them. Assert the full check URL
@@ -89,18 +148,14 @@ def test_landing_page_has_no_check_links(client):
 
 
 def test_results_render_with_safe_link(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(
-        app_module,
-        "find_footprint",
-        lambda *_args, **_kwargs: [
+    _patch_scan(monkeypatch, results=[
             {
                 "id": "duck_0",
                 "title": "Profile",
                 "url": "https://example.com/jane",
                 "snippet": "bio",
             }
-        ],
-    )
+        ])
     resp = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
     assert b'rel="noopener noreferrer"' in resp.data
     assert b"https://example.com/jane" in resp.data
@@ -108,18 +163,14 @@ def test_results_render_with_safe_link(client, csrf_token, monkeypatch):
 
 # --- Send flow --------------------------------------------------------------
 def test_send_renders_generated_petitions(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(
-        app_module,
-        "find_footprint",
-        lambda *_args, **_kwargs: [
+    _patch_scan(monkeypatch, results=[
             {
                 "id": "duck_0",
                 "title": "Profile",
                 "url": "https://example.com/jane",
                 "snippet": "",
             }
-        ],
-    )
+        ])
     client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
     resp = client.post(
         "/send",
@@ -130,7 +181,7 @@ def test_send_renders_generated_petitions(client, csrf_token, monkeypatch):
         },
     )
     assert resp.status_code == 200
-    assert b"Generated Petitions" in resp.data
+    assert b"Generated petitions" in resp.data
     assert b"https://example.com/jane" in resp.data
 
 
@@ -141,13 +192,41 @@ def test_send_with_no_selection_redirects(client, csrf_token):
 
 # --- Rate limiting ----------------------------------------------------------
 def test_search_is_rate_limited(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_args, **_kwargs: [])
-    monkeypatch.setattr(app_module, "SEARCH_RATE_LIMIT", 3)
-    # First 3 succeed, the 4th is blocked.
-    for _ in range(3):
+    _patch_scan(monkeypatch)
+    # A scan is charged the size of the plan it is about to run, so the budget
+    # here is expressed in plans rather than in requests.
+    cost = search_plan.plan_size(IdentityProfile(full_name="Jane"), "standard")
+    monkeypatch.setattr(app_module, "SEARCH_RATE_LIMIT", cost * 2)
+    for _ in range(2):
         ok = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
         assert b"Too many searches" not in ok.data
     blocked = client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
+    assert b"Too many searches" in blocked.data
+
+
+def test_deep_scan_is_charged_more_than_a_quick_one(client, csrf_token, monkeypatch):
+    """The limiter must price a scan by the requests it actually makes.
+
+    A deep plan issues several times the upstream searches of a quick one.
+    Charging both a flat token would let a client drain the search provider's
+    quota with a handful of clicks, after which every user gets throttled.
+    """
+    _patch_scan(monkeypatch)
+    profile = IdentityProfile(full_name="Jane Doe", location="Austin")
+    quick = search_plan.plan_size(profile, "quick")
+    deep = search_plan.plan_size(profile, "deep")
+    assert deep > quick
+
+    # A budget that comfortably fits one quick scan but not one deep scan.
+    monkeypatch.setattr(app_module, "SEARCH_RATE_LIMIT", deep - 1)
+    form = {"user_info": "Jane Doe", "location": "Austin", "csrf_token": csrf_token}
+
+    app_module.reset_rate_limiter()
+    allowed = client.post("/", data={**form, "depth": "quick"})
+    assert b"Too many searches" not in allowed.data
+
+    app_module.reset_rate_limiter()
+    blocked = client.post("/", data={**form, "depth": "deep"})
     assert b"Too many searches" in blocked.data
 
 
@@ -203,7 +282,7 @@ def test_blank_name_does_not_silently_reuse_the_previous_query(
     # Regression: an explicitly *blank* field must not fall back to whatever was
     # scanned earlier. Doing so would send a previous name or email to every
     # broker without the user asking for it in this request.
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_a, **_k: [])
+    _patch_scan(monkeypatch)
     calls = []
     monkeypatch.setattr(
         app_module.scanner,
@@ -231,7 +310,7 @@ def test_username_cost_matches_the_platforms_actually_requested(monkeypatch):
 
 
 def test_broker_sweep_falls_back_to_last_query(client, csrf_token, monkeypatch):
-    monkeypatch.setattr(app_module, "find_footprint", lambda *_a, **_k: [])
+    _patch_scan(monkeypatch)
     monkeypatch.setattr(app_module.scanner, "check_brokers", _fake_checks)
     client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
     # No user_info supplied: the name from the previous scan is reused.
@@ -353,7 +432,7 @@ def test_send_generates_petition_for_a_broker_id(client, csrf_token):
         },
     )
     assert resp.status_code == 200
-    assert b"Generated Petitions" in resp.data
+    assert b"Generated petitions" in resp.data
     assert b"Spokeo" in resp.data
     assert b"Article 17" in resp.data  # the chosen legal basis is cited
     assert b"telephone number" in resp.data  # the chosen data types are named

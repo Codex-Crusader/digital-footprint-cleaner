@@ -1,0 +1,65 @@
+{#
+  Shared page shell: document head, site navigation, flash messages, footer.
+
+  Every page extends this so the three views cannot drift apart in markup the
+  way they had. Note the Content-Security-Policy set in app.py allows
+  `script-src 'self'` and `style-src 'self'` only -- no inline <script> block,
+  no style="..." attribute anywhere in these templates will execute. The
+  interactive parts of the UI are therefore built from HTML and CSS alone
+  (details/summary, :checked siblings), which also means every one of them
+  keeps working with JavaScript disabled.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Digital Footprint Cleaner{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand-mark" aria-hidden="true">&#9679;</span>
+        <span class="brand-text">Digital Footprint Cleaner</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="{{ url_for('index') }}"
+           {% if active_page == 'scan' %}class="is-active" aria-current="page"{% endif %}>Scan</a>
+        <a href="{{ url_for('dashboard') }}"
+           {% if active_page == 'dashboard' %}class="is-active" aria-current="page"{% endif %}>Tracker</a>
+        <a href="{{ url_for('legal') }}"
+           {% if active_page == 'legal' %}class="is-active" aria-current="page"{% endif %}>Your rights</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    {% block hero %}{% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="flash flash-{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Everything runs locally and nothing you type is sent anywhere except the
+      services being checked. Use this on <strong>your own</strong> footprint, or
+      someone's with their consent.
+    </p>
+    <p><a href="{{ url_for('legal') }}">Know your rights</a></p>
+  </footer>
+</body>
+</html>

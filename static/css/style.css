@@ -1,15 +1,87 @@
+/*
+ * Digital Footprint Cleaner -- stylesheet.
+ *
+ * Two things drive the design decisions here.
+ *
+ * 1. The app's Content-Security-Policy allows `style-src 'self'` and
+ *    `script-src 'self'` only. There is no inline style attribute and no
+ *    JavaScript anywhere in the templates, so every interactive control below
+ *    is built from HTML and CSS alone: `details/summary` for disclosure, and
+ *    `:checked ~ sibling` rules for the confidence filter. A pleasant side
+ *    effect is that all of it works with scripting disabled.
+ *
+ * 2. Status colour is load-bearing, not decoration. Green must mean "checked
+ *    and clear", amber must mean "could not be checked", and the two must never
+ *    be confusable -- a privacy tool that renders an unknown as a pass tells
+ *    someone they are safe when nobody actually looked. Every status also
+ *    carries a text label for the same reason, so colour is never the only
+ *    channel.
+ */
+
 :root {
-  --purple: #6a0dad;
-  --purple-dark: #55088c;
-  --purple-soft: #f3e8fb;
-  --ink: #1f2330;
-  --text: #3a3f4b;
-  --muted: #6b7280;
-  --line: #e7e5ee;
+  color-scheme: light dark;
+
+  --accent: #6d28d9;
+  --accent-strong: #5b21b6;
+  --accent-soft: #f3ecfd;
+  --accent-ring: rgba(109, 40, 217, 0.16);
+
+  --page: #f6f5fa;
   --card: #ffffff;
-  --page: #f5f3f9;
-  --shadow: 0 1px 3px rgba(20, 10, 40, 0.06), 0 8px 24px rgba(20, 10, 40, 0.06);
+  --raised: #fbfaff;
+  --ink: #16181f;
+  --text: #3c4150;
+  --muted: #6b7280;
+  --line: #e6e4ee;
+  --line-strong: #d5d1e2;
+
+  --danger: #c22a1f;
+  --danger-bg: #fdecea;
+  --danger-line: #f0b3ad;
+  --warn: #8a6100;
+  --warn-bg: #fff5df;
+  --warn-line: #f0cf8b;
+  --ok: #1c6b39;
+  --ok-bg: #e7f8ee;
+  --ok-line: #9bd7b2;
+
   --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(20, 10, 40, 0.05), 0 8px 24px rgba(20, 10, 40, 0.06);
+  --shadow-sm: 0 1px 2px rgba(20, 10, 40, 0.06);
+}
+
+/* Dark mode follows the OS setting. Only the tokens change -- no component
+   below needs its own dark variant, which is the point of defining them. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #a78bfa;
+    --accent-strong: #c4b5fd;
+    --accent-soft: #241d3a;
+    --accent-ring: rgba(167, 139, 250, 0.22);
+
+    --page: #0f1117;
+    --card: #171a22;
+    --raised: #1d212b;
+    --ink: #f2f3f7;
+    --text: #c7cbd6;
+    --muted: #8f96a6;
+    --line: #272c38;
+    --line-strong: #363c4c;
+
+    --danger: #ff9c92;
+    --danger-bg: #34191a;
+    --danger-line: #6d2b2b;
+    --warn: #f2c85c;
+    --warn-bg: #2f2716;
+    --warn-line: #5e4c1f;
+    --ok: #7ddba3;
+    --ok-bg: #14291d;
+    --ok-line: #2d5c3f;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
 }
 
 * {
@@ -17,12 +89,11 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
+  margin: 0;
   background: var(--page);
   color: var(--text);
-  margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -32,24 +103,137 @@ h2,
 h3 {
   color: var(--ink);
   line-height: 1.25;
+  margin: 0 0 8px;
 }
 
-h1 {
-  font-size: 1.8rem;
-  margin: 0 0 4px;
+h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+
+p { margin: 0 0 12px; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
 }
 
-h1 .logo {
-  color: var(--purple);
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 10;
+  background: var(--card);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+
+/* --- Site chrome ---------------------------------------------------------- */
+
+.site-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.site-header-inner {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.brand:hover { text-decoration: none; }
+
+.brand-mark {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.site-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.site-nav a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.site-nav a:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.site-nav a.is-active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .container {
-  max-width: 780px;
+  max-width: 940px;
   margin: 0 auto;
-  padding: 32px 20px 64px;
+  padding: 28px 20px 56px;
 }
 
-/* Cards */
+.hero { margin-bottom: 22px; }
+
+.lead {
+  color: var(--muted);
+  font-size: 1.02rem;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 22px 20px 40px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.site-footer p { margin: 0 0 6px; max-width: 66ch; margin-inline: auto; }
+
+.footer-links {
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* --- Cards ---------------------------------------------------------------- */
+
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -59,153 +243,234 @@ h1 .logo {
   margin: 18px 0;
 }
 
-.lead {
-  color: var(--muted);
-  margin: 0 0 22px;
-  font-size: 0.98rem;
+.card > h2:first-child { margin-top: 0; }
+
+.search-card { border-top: 3px solid var(--accent); }
+
+/* --- Forms ---------------------------------------------------------------- */
+
+.field { margin: 0 0 14px; }
+
+.field-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-/* Forms */
+.field-grow { flex: 1 1 240px; }
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0 16px;
+}
+
 label {
   display: block;
   font-weight: 600;
   color: var(--ink);
-  margin: 12px 0 6px;
-  font-size: 0.92rem;
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.optional,
+.hint {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.86rem;
+}
+
+.hint { display: block; margin: 6px 0 0; }
+
+.hint-block {
+  margin: 0 0 14px;
+  max-width: 72ch;
+  line-height: 1.55;
 }
 
 input[type="text"],
-input[type="email"] {
+input[type="email"],
+select {
   width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  font-size: 1rem;
-  background: #fff;
+  padding: 11px 13px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-size: 0.98rem;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--ink);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input[type="text"]:focus,
-input[type="email"]:focus {
+input[type="email"]:focus,
+select:focus {
   outline: none;
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px var(--purple-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
-input[type="submit"],
-button {
-  background: var(--purple);
-  color: #fff;
-  border: none;
-  padding: 12px 22px;
-  border-radius: 10px;
+input::placeholder { color: var(--muted); opacity: 0.75; }
+
+.btn {
+  display: inline-block;
+  background: var(--raised);
+  color: var(--ink);
+  border: 1.5px solid var(--line-strong);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.98rem;
+  font-size: 0.94rem;
+  font-family: inherit;
   font-weight: 600;
-  margin-top: 16px;
-  transition: background 0.15s, transform 0.05s;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
 
-input[type="submit"]:hover,
-button:hover {
-  background: var(--purple-dark);
+.btn:hover { border-color: var(--accent); text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
-input[type="submit"]:active,
-button:active {
-  transform: translateY(1px);
+.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+.btn-lg { padding: 13px 26px; font-size: 1rem; }
+
+.btn-sm { padding: 7px 13px; font-size: 0.86rem; }
+
+.btn-quiet { color: var(--muted); }
+
+.btn-danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-line);
+  color: var(--danger);
 }
 
-/* Result / checklist lists */
-.checkbox-list {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0;
-}
+.btn-danger:hover { border-color: var(--danger); }
 
-.checkbox-list li {
-  padding: 12px 14px;
+/* --- Disclosure sections (details/summary) -------------------------------- */
+
+details.narrowing,
+details.petition-options,
+details.coverage-detail,
+details.unverified {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
+  padding: 0;
+  margin: 16px 0;
+  background: var(--raised);
+}
+
+details > summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.94rem;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-radius: var(--radius-sm);
+}
+
+details > summary::-webkit-details-marker { display: none; }
+
+details > summary::before {
+  content: "\25B8";
+  color: var(--accent);
+  font-size: 0.8rem;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+details[open] > summary::before { transform: rotate(90deg); }
+
+details > summary:hover { color: var(--accent-strong); }
+
+.narrowing-body,
+.petition-options-body,
+.coverage-body {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--line);
+}
+
+details.unverified { background: var(--card); }
+details.unverified .result-list { padding: 0 16px 16px; }
+details.unverified > .hint-block { padding: 0 16px; }
+
+/* --- Scan depth selector -------------------------------------------------- */
+
+.depth-choice {
+  border: none;
+  padding: 0;
+  margin: 18px 0 6px;
+}
+
+.depth-choice legend {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.9rem;
+  padding: 0;
   margin-bottom: 8px;
-  background: #fff;
+}
+
+.depth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.depth-option {
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  margin: 0;
+  font-weight: 400;
+  display: block;
+  background: var(--card);
   transition: border-color 0.15s, background 0.15s;
 }
 
-.checkbox-list li:hover {
-  border-color: #d9d3e6;
-  background: #fcfbff;
+.depth-option:hover { border-color: var(--accent); }
+
+.depth-option input { margin-right: 8px; accent-color: var(--accent); }
+
+.depth-name {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.94rem;
 }
 
-.snippet {
+.depth-desc {
   display: block;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
   margin-top: 4px;
-  word-break: break-word;
 }
 
-a {
-  color: var(--purple);
-  text-decoration: none;
+/* `:has` gives the selected card a visible state without JavaScript. Where it
+   is unsupported the radio dot still shows the choice, so nothing is lost. */
+.depth-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
-a:hover {
-  text-decoration: underline;
-}
+/* --- Exposure summary ----------------------------------------------------- */
 
-hr {
-  border: none;
-  border-top: 1px solid var(--line);
-  margin: 26px 0;
-}
-
-/* Flash messages */
-.flashes {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 16px;
-}
-
-.flash {
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  border: 1px solid transparent;
-  font-size: 0.95rem;
-}
-
-.flash-success {
-  background: #e9f9ef;
-  border-color: #9fd9b4;
-  color: #1e6b34;
-}
-
-.flash-warning {
-  background: #fff6e0;
-  border-color: #f3d38a;
-  color: #7a5900;
-}
-
-.flash-danger {
-  background: #fdeceb;
-  border-color: #f1b4af;
-  color: #a50e0e;
-}
-
-.notice {
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-/* Exposure risk card */
 .risk-card {
   border-radius: var(--radius);
-  padding: 20px 24px;
+  padding: 18px 24px;
   margin: 18px 0;
   border: 1px solid var(--line);
-  border-left: 6px solid var(--purple);
-  background: #fff;
+  border-left: 6px solid var(--accent);
+  background: var(--card);
   box-shadow: var(--shadow);
   display: flex;
   align-items: center;
@@ -214,214 +479,478 @@ hr {
 }
 
 .risk-badge {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   padding: 6px 16px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
-.risk-card p {
-  margin: 0;
+.risk-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
   color: var(--text);
+  font-size: 0.94rem;
 }
 
-.risk-High {
-  border-left-color: #d93025;
-}
-.risk-High .risk-badge {
-  background: #fdeceb;
-  color: #a50e0e;
-}
+.risk-stats strong { color: var(--ink); }
 
-.risk-Medium {
-  border-left-color: #f4b400;
-}
-.risk-Medium .risk-badge {
-  background: #fff6e0;
-  color: #7a5900;
-}
+.risk-High { border-left-color: var(--danger); }
+.risk-High .risk-badge { background: var(--danger-bg); color: var(--danger); }
+.risk-Medium { border-left-color: var(--warn); }
+.risk-Medium .risk-badge { background: var(--warn-bg); color: var(--warn); }
+.risk-Low { border-left-color: var(--ok); }
+.risk-Low .risk-badge { background: var(--ok-bg); color: var(--ok); }
 
-.risk-Low {
-  border-left-color: #34a853;
-}
-.risk-Low .risk-badge {
-  background: #e9f9ef;
-  color: #1e6b34;
-}
-
-/* Data-broker "you appear here" alert */
-.brokers-found {
-  border: 1px solid #f1b4af;
-  border-left: 6px solid #d93025;
-  background: #fffafa;
-  border-radius: var(--radius);
-  padding: 18px 24px;
+/* Dashboard stat row */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
   margin: 18px 0;
 }
 
-.brokers-found h2 {
-  color: #a50e0e;
-  margin-top: 0;
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
 }
 
-/* Badges / pills */
-.badge {
-  display: inline-block;
-  margin: 22px 0 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: var(--purple-soft);
-  color: var(--purple-dark);
+.stat-value {
+  display: block;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.stat-label { color: var(--muted); font-size: 0.88rem; }
+.stat-good .stat-value { color: var(--ok); }
+
+/* --- Scan coverage -------------------------------------------------------- */
+
+.coverage { border-left: 6px solid var(--ok); }
+.coverage-partial { border-left-color: var(--warn); }
+
+.coverage-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.coverage-head h2 { margin: 0; }
+
+.coverage-count { color: var(--muted); font-size: 0.92rem; }
+.coverage-count strong { color: var(--ink); }
+
+.coverage-group {
+  text-transform: capitalize;
+  color: var(--muted);
   font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  margin: 16px 0 4px;
+}
+
+/* --- Findings ------------------------------------------------------------- */
+
+.category { margin: 0 0 22px; }
+
+.category-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.category-count {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.result {
+  display: flex;
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  background: var(--card);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.result:hover { border-color: var(--line-strong); background: var(--raised); }
+
+.result-select { margin: 2px 0 0; }
+.result-select input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.result-body { min-width: 0; flex: 1; }
+
+.result-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.result-title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.96rem;
+}
+
+.result-url {
+  display: block;
+  font-size: 0.84rem;
+  word-break: break-word;
+  margin-top: 2px;
+}
+
+.result-snippet {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 5px 0 0;
+}
+
+.result-why {
+  margin: 7px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.why-label {
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.chip {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.79rem;
+  font-weight: 600;
+}
+
+.chip-muted {
+  background: var(--raised);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  font-weight: 400;
+}
+
+/* Confidence tags. Deliberately not a red/green scale: a "strong match" is a
+   statement about identity, not about danger, and colouring it red would read
+   as "this is bad" rather than "this is definitely you". */
+.tag {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-h2 .badge {
-  margin: 0 0 0 8px;
-  vertical-align: middle;
+.tag-strong { background: var(--accent-soft); color: var(--accent-strong); }
+.tag-likely { background: var(--raised); color: var(--text); border: 1px solid var(--line-strong); }
+.tag-possible { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.tag-unverified { background: var(--warn-bg); color: var(--warn); }
+
+.confidence-strong { border-left: 3px solid var(--accent); }
+
+.confidence-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.badge-danger {
-  background: #fdeceb;
-  color: #a50e0e;
+/* --- Pure-CSS confidence filter ------------------------------------------- */
+/* The radios are visually hidden but stay focusable, so the control is usable
+   from the keyboard and announced by screen readers. */
+
+.vfilter {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
 }
 
-.cat-data_broker {
-  background: #fdeceb;
-  color: #a50e0e;
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
 }
 
-.cat-public_records {
-  background: #fff6e0;
-  color: #7a5900;
+.filter-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
-/* Proactive broker checklist (prominent) */
-.broker-checklist {
-  border-top: 4px solid var(--purple);
+.filter-row label {
+  margin: 0;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--card);
 }
 
-.broker-checklist h2 {
-  margin-top: 0;
+.filter-row label:hover { border-color: var(--accent); color: var(--accent-strong); }
+
+#f-all:checked ~ .filter-row label[for="f-all"],
+#f-likely:checked ~ .filter-row label[for="f-likely"],
+#f-strong:checked ~ .filter-row label[for="f-strong"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
+
+.vfilter:focus-visible ~ .filter-row label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#f-likely:checked ~ form .result.confidence-possible,
+#f-strong:checked ~ form .result.confidence-possible,
+#f-strong:checked ~ form .result.confidence-likely {
+  display: none;
+}
+
+/* A category whose every result is filtered out would otherwise leave a
+   dangling heading with nothing under it. */
+#f-likely:checked ~ form .category:not(:has(.result.confidence-strong, .result.confidence-likely)),
+#f-strong:checked ~ form .category:not(:has(.result.confidence-strong)) {
+  display: none;
+}
+
+/* --- Broker sections ------------------------------------------------------ */
+
+.brokers-found {
+  border: 1px solid var(--danger-line);
+  border-left: 6px solid var(--danger);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin: 18px 0;
+  box-shadow: var(--shadow);
+}
+
+.brokers-found h2 { color: var(--danger); margin-top: 0; }
+
+.broker-hits { list-style: none; padding: 0; margin: 0; }
+
+.broker-hits li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.broker-hits li:first-child { border-top: none; }
+
+.broker-checklist { border-top: 3px solid var(--accent); }
 
 .broker-grid {
   list-style: none;
   padding: 0;
-  margin: 12px 0 0;
+  margin: 14px 0 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 8px;
 }
 
 .broker-grid li {
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  background: var(--card);
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 8px;
 }
 
-.broker-grid li:hover {
-  border-color: #d9d3e6;
-}
+.broker-grid li:hover { border-color: var(--line-strong); }
+
+.broker-grid input { accent-color: var(--accent); }
 
 .broker-name {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+  flex: 1;
+  cursor: pointer;
 }
 
 .broker-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   white-space: nowrap;
+  font-size: 0.85rem;
 }
 
-.broker-grid .opt-out {
-  font-weight: 600;
-}
+.broker-grid .opt-out { font-weight: 600; }
 
-/* Petitions */
-.petition {
+/* --- Tri-state check lists ------------------------------------------------ */
+/* Used by the broker sweep, the email signals, the username check and the scan
+   coverage panel. The colour scheme is inverted from the usual: 'found' means
+   the user IS exposed, so it is the alarming one, and 'unknown' must never look
+   like a pass -- it means the check could not be completed at all. */
+
+.check-list { list-style: none; padding: 0; margin: 10px 0 0; }
+
+.check {
+  padding: 10px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 14px;
-  background: #fbfaff;
+  border-left: 5px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-bottom: 7px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.petition pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
-  font-size: 0.88rem;
-  margin: 8px 0 0;
-}
-
-.footer {
-  margin-top: 34px;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-/* Secondary probes (email / username) shown side by side */
-.probe-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 18px;
-}
-
-.probe-row .probe {
-  margin: 18px 0 0;
-}
-
-.probe h2 {
-  margin-top: 0;
-  font-size: 1.15rem;
-}
-
-/* Select controls, matched to the text inputs */
-select {
-  width: 100%;
-  padding: 11px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  font-size: 1rem;
-  background: #fff;
-  color: var(--text);
-}
-
-select:focus {
-  outline: none;
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px var(--purple-soft);
-}
-
-/* Petition tailoring controls */
-.petition-options {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 6px 18px 18px;
-  margin: 22px 0 0;
-}
-
-.petition-options legend {
+.check-status {
+  flex: 0 0 auto;
+  min-width: 86px;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--ink);
-  padding: 0 8px;
-  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
+
+.check-name { font-weight: 600; color: var(--ink); font-size: 0.93rem; }
+
+.check .snippet {
+  color: var(--muted);
+  font-size: 0.86rem;
+  word-break: break-word;
+}
+
+.check-actions {
+  flex-basis: 100%;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Exposed / present */
+.check-found,
+.check-listed {
+  border-left-color: var(--danger);
+}
+.check-found .check-status,
+.check-listed .check-status {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* Checked and clear */
+.check-not_found,
+.check-not_listed,
+.check-pass-ok,
+.check-pass-empty {
+  border-left-color: var(--ok);
+}
+.check-not_found .check-status,
+.check-not_listed .check-status,
+.check-pass-ok .check-status,
+.check-pass-empty .check-status {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+/* Could not be determined -- never styled as a pass. */
+.check-unknown,
+.check-pass-failed {
+  border-left-color: var(--warn);
+}
+.check-unknown .check-status,
+.check-pass-failed .check-status {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* Not attempted */
+.check-skipped,
+.check-pass-skipped {
+  border-left-color: var(--line-strong);
+  opacity: 0.8;
+}
+.check-skipped .check-status,
+.check-pass-skipped .check-status {
+  background: var(--raised);
+  color: var(--muted);
+}
+
+/* Tracker statuses */
+.check-status-todo,
+.check-status-reappeared { border-left-color: var(--warn); }
+.check-status-sent,
+.check-status-acknowledged { border-left-color: var(--accent); }
+.check-status-removed { border-left-color: var(--ok); }
+.check-status-refused { border-left-color: var(--danger); }
+
+.check-status-todo .check-status,
+.check-status-reappeared .check-status { background: var(--warn-bg); color: var(--warn); }
+.check-status-sent .check-status,
+.check-status-acknowledged .check-status { background: var(--accent-soft); color: var(--accent-strong); }
+.check-status-removed .check-status { background: var(--ok-bg); color: var(--ok); }
+.check-status-refused .check-status { background: var(--danger-bg); color: var(--danger); }
+
+/* --- Badges --------------------------------------------------------------- */
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cat-data_broker { background: var(--danger-bg); color: var(--danger); }
+.cat-public_records { background: var(--warn-bg); color: var(--warn); }
+
+/* --- Petition options ----------------------------------------------------- */
 
 .field-label {
   display: block;
   font-weight: 600;
   color: var(--ink);
-  margin: 16px 0 6px;
-  font-size: 0.92rem;
+  margin: 4px 0 6px;
+  font-size: 0.9rem;
 }
 
 .option-grid {
@@ -433,126 +962,61 @@ select:focus {
   gap: 4px 12px;
 }
 
-.option-grid li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.option-grid li { display: flex; align-items: center; gap: 8px; }
+.option-grid input { accent-color: var(--accent); }
 
 .option-grid label {
   margin: 0;
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: 0.89rem;
 }
 
-/* Tri-state check results (broker sweep, email signals, username presence).
-   The colour scheme is inverted from the usual: 'found' means the user IS
-   exposed, so it is the alarming one. 'unknown' must never look like a pass --
-   it means the check could not be completed at all. */
-.check-list {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 0;
-}
-
-.check {
-  padding: 10px 14px;
+.petition {
   border: 1px solid var(--line);
-  border-left: 5px solid var(--line);
-  border-radius: 10px;
-  margin-bottom: 8px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  background: var(--raised);
 }
 
-.check-status {
-  flex: 0 0 auto;
-  min-width: 88px;
-  text-align: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+.petition pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+  color: var(--text);
 }
 
-.check-name {
-  font-weight: 600;
-  color: var(--ink);
-}
+/* --- Probes --------------------------------------------------------------- */
 
-.check .snippet {
-  flex-basis: 100%;
-  margin: 0;
-}
-
-/* Exposed */
-.check-found,
-.check-listed {
-  border-left-color: #d93025;
-  background: #fffafa;
-}
-.check-found .check-status,
-.check-listed .check-status {
-  background: #fdeceb;
-  color: #a50e0e;
-}
-
-/* Clear */
-.check-not_found,
-.check-not_listed {
-  border-left-color: #34a853;
-}
-.check-not_found .check-status,
-.check-not_listed .check-status {
-  background: #e9f9ef;
-  color: #1e6b34;
-}
-
-/* Could not be determined */
-.check-unknown {
-  border-left-color: #f4b400;
-  background: #fffdf7;
-}
-.check-unknown .check-status {
-  background: #fff6e0;
-  color: #7a5900;
-}
-
-/* Not attempted */
-.check-skipped {
-  border-left-color: var(--line);
-  opacity: 0.75;
-}
-.check-skipped .check-status {
-  background: #f0eef5;
-  color: var(--muted);
-}
-
-/* Gravatar profile facts */
-.profile-facts {
+.probe-row {
   display: grid;
-  grid-template-columns: minmax(90px, auto) 1fr;
-  gap: 4px 16px;
-  margin: 10px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 18px;
 }
 
-.profile-facts dt {
-  font-weight: 600;
-  color: var(--ink);
-  font-size: 0.9rem;
+.probe-row .probe { margin: 18px 0 0; }
+.probe h2 { margin-top: 0; font-size: 1.08rem; }
+
+/* --- Flash messages ------------------------------------------------------- */
+
+.flashes { list-style: none; padding: 0; margin: 0 0 16px; }
+
+.flash {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+  font-size: 0.93rem;
 }
 
-.profile-facts dd {
-  margin: 0;
-  font-size: 0.9rem;
-}
+.flash-success { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok); }
+.flash-warning { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn); }
+.flash-danger { background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger); }
 
-/* Removal tracker */
+/* --- Misc ----------------------------------------------------------------- */
+
 .inline-form {
   display: flex;
   align-items: flex-end;
@@ -561,63 +1025,34 @@ select:focus {
   margin: 12px 0 0;
 }
 
-.inline-form label {
-  margin: 0;
+.inline-form .field { margin: 0; }
+.inline-form select { width: auto; min-width: 150px; }
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr;
+  gap: 8px 18px;
+  margin: 10px 0 0;
 }
 
-.inline-form input[type="submit"] {
-  margin-top: 0;
-  padding: 9px 16px;
-  font-size: 0.9rem;
+.profile-facts dt { font-weight: 700; color: var(--ink); font-size: 0.9rem; }
+.profile-facts dd { margin: 0; font-size: 0.92rem; }
+
+.plain-list { margin: 0; padding-left: 20px; }
+.plain-list li { margin-bottom: 8px; }
+
+.danger-zone { border-left: 4px solid var(--danger); }
+
+.empty-state { text-align: center; }
+.empty-state .hint-block { margin-inline: auto; }
+
+.snippet {
+  display: block;
+  color: var(--muted);
+  font-size: 0.87rem;
+  word-break: break-word;
 }
 
-.inline-form select {
-  width: auto;
-  min-width: 150px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-}
-
-.inline-form input[type="text"] {
-  width: auto;
-  flex: 1 1 200px;
-}
-
-.check-status-todo,
-.check-status-reappeared {
-  border-left-color: #f4b400;
-}
-.check-status-sent,
-.check-status-acknowledged {
-  border-left-color: var(--purple);
-}
-.check-status-removed {
-  border-left-color: #34a853;
-}
-.check-status-refused {
-  border-left-color: #d93025;
-}
-
-.check-status-todo .check-status,
-.check-status-reappeared .check-status {
-  background: #fff6e0;
-  color: #7a5900;
-}
-.check-status-sent .check-status,
-.check-status-acknowledged .check-status {
-  background: var(--purple-soft);
-  color: var(--purple-dark);
-}
-.check-status-removed .check-status {
-  background: #e9f9ef;
-  color: #1e6b34;
-}
-.check-status-refused .check-status {
-  background: #fdeceb;
-  color: #a50e0e;
-}
-
-/* Accessible label that is visually hidden but read by screen readers. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -630,41 +1065,13 @@ select:focus {
   border: 0;
 }
 
-/* Legal page */
-header {
-  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-  color: #fff;
-  padding: 26px 20px;
-  text-align: center;
+@media (max-width: 600px) {
+  .container { padding: 20px 14px 44px; }
+  h1 { font-size: 1.55rem; }
+  .card { padding: 18px 16px; }
+  .risk-card { padding: 16px 18px; }
 }
 
-header h1 {
-  color: #fff;
-}
-
-header nav a {
-  color: #fff;
-  text-decoration: underline;
-}
-
-main {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-main section {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px 24px;
-  margin-bottom: 18px;
-}
-
-footer {
-  text-align: center;
-  color: var(--muted);
-  padding: 20px;
-  font-size: 0.9rem;
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
 }

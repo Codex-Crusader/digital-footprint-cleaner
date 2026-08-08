@@ -39,8 +39,15 @@ from flask import (
 
 import analysis
 import scanner
-from scanner import SearchError, find_footprint
-from utils import email_signals, petition_writer, tracker, username_check
+from utils import (
+    email_signals,
+    petition_writer,
+    result_store,
+    search_plan,
+    tracker,
+    username_check,
+)
+from utils.identity import IdentityProfile
 from utils.validation import MAX_NAME_LENGTH, MAX_QUERY_LENGTH, clamp_text
 
 logging.basicConfig(level=logging.INFO)
@@ -83,8 +90,13 @@ app.config.update(
 # Budget is counted in tokens, not requests: see _is_rate_limited. A plain
 # search costs 1, but the fan-out endpoints cost roughly one token per upstream
 # request they make, so the default allowance is sized for a realistic session
-# (one scan, one broker sweep, one email check, one username check).
-SEARCH_RATE_LIMIT = int(os.getenv("SEARCH_RATE_LIMIT", "30"))
+# (one deep scan, one broker sweep, one email check, one username check).
+#
+# The allowance grew with the deep scan: a "deep" plan is around 17 upstream
+# searches on its own, and the old budget of 30 would have left no room for the
+# broker sweep that naturally follows it. Sized from the endpoint costs below
+# rather than picked round.
+SEARCH_RATE_LIMIT = int(os.getenv("SEARCH_RATE_LIMIT", "70"))
 SEARCH_RATE_WINDOW = int(os.getenv("SEARCH_RATE_WINDOW", "60"))  # seconds
 _rate_lock = threading.Lock()
 _rate_hits: "defaultdict[str, deque]" = defaultdict(deque)
@@ -168,6 +180,20 @@ USERNAME_CHECK_COST = sum(
 )
 
 
+def _remember_results(results):
+    """Store the id-to-URL map server-side and put only a token in the session.
+
+    The map used to live in the session cookie itself, which held ten results
+    comfortably and a deep scan's hundred-plus not at all -- see
+    :mod:`utils.result_store` for what that silently broke.
+    """
+    token = result_store.store.put(
+        {item["id"]: item["url"] for item in results},
+        token=session.get("results_token"),
+    )
+    session["results_token"] = token
+
+
 def _render_index(**overrides):
     """Render the single-page UI with every template variable defaulted.
 
@@ -182,7 +208,11 @@ def _render_index(**overrides):
     context = {
         "results": [],
         "report": None,
+        "coverage": None,
         "brokers": analysis.all_brokers(),
+        "profile": IdentityProfile(),
+        "depth": search_plan.DEFAULT_DEPTH,
+        "depths": search_plan.depth_choices(),
         "user_info": "",
         "location": "",
         "error": None,
@@ -199,46 +229,91 @@ def _render_index(**overrides):
     return render_template("index.html", **context)
 
 
+def _coverage_summary(report):
+    """Turn a :class:`scanner.DeepSearchReport` into template-friendly data.
+
+    Coverage is reported as prominently as the results themselves. A deep scan
+    makes many requests and some routinely fail; if the page showed only what
+    was found, a half-throttled sweep would read exactly like a clean bill of
+    health. Telling the user "11 of 17 checks completed" is the difference
+    between an honest tool and a reassuring one.
+    """
+    groups: "dict[str, list[dict]]" = {}
+    for outcome in report.outcomes:
+        groups.setdefault(outcome.group, []).append(
+            {
+                "key": outcome.key,
+                "label": outcome.label,
+                "status": outcome.status,
+                "count": outcome.count,
+                "detail": outcome.detail,
+            }
+        )
+    return {
+        "groups": [{"key": key, "passes": passes} for key, passes in groups.items()],
+        "completed": report.completed_passes,
+        "total": report.total_passes,
+        "failed": report.failed_passes,
+        "partial": report.partial,
+        "complete": report.complete,
+    }
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     """Homepage: search form plus results/petition rendering."""
-    results = []
+    profile = IdentityProfile()
     report = None
-    user_info = ""
-    location = ""
+    coverage = None
+    depth = search_plan.DEFAULT_DEPTH
     error = None
     searched = False
+    results = []
 
     if request.method == "POST":
-        user_info = clamp_text(request.form.get("user_info", ""), MAX_QUERY_LENGTH)
-        location = clamp_text(request.form.get("location", ""), MAX_QUERY_LENGTH)
+        profile = IdentityProfile.from_form(request.form)
+        depth = search_plan.resolve_depth(request.form.get("depth"))
         searched = True
-        if not user_info:
-            error = "Please provide your name or email to search."
-        elif _is_rate_limited(request.remote_addr or "unknown"):
+
+        # Charged at the size of the plan about to run, derived from the plan
+        # itself. A hardcoded number silently undercharges the moment a depth
+        # tier gains a pass -- the same reasoning as USERNAME_CHECK_COST.
+        cost = search_plan.plan_size(profile, depth)
+
+        if not profile.has_name:
+            error = "Please provide a name to search for."
+        elif _is_rate_limited(request.remote_addr or "unknown", cost=max(1, cost)):
             error = "Too many searches. Please wait a moment and try again."
             logger.warning("Rate limit hit for %s", request.remote_addr)
         else:
             try:
-                results = find_footprint(user_info, location=location or None)
-                report = analysis.analyze(results)
-                session["result_map"] = {item["id"]: item["url"] for item in results}
-                # Remembered so the broker sweep can reuse it without asking
-                # the user to retype their name.
-                session["last_query"] = user_info
+                scan = scanner.deep_search(profile, depth=depth)
             except ValueError:
-                error = "Please provide your name or email to search."
-            except SearchError:
-                error = "The search service is temporarily unavailable. Please try again shortly."
+                error = "Please provide a name to search for."
             except Exception as exc:  # noqa: BLE001 - last-resort safety net
                 error = "There was an error processing your request."
-                logger.error("Unexpected error in find_footprint: %s", exc)
+                logger.error("Unexpected error in deep_search: %s", type(exc).__name__)
+                logger.debug("Deep search failure detail", exc_info=True)
+            else:
+                # deep_search never raises for a backend problem: individual
+                # passes fail into the coverage report instead, so a partly
+                # throttled sweep still shows what it did find.
+                results = scan.results
+                report = analysis.analyze(results, profile=profile)
+                coverage = _coverage_summary(scan)
+                _remember_results(results)
+                # Remembered so the broker sweep can reuse it without asking
+                # the user to retype their name.
+                session["last_query"] = profile.core_name or profile.full_name
 
     return _render_index(
         results=results,
         report=report,
-        user_info=user_info,
-        location=location,
+        coverage=coverage,
+        profile=profile,
+        depth=depth,
+        user_info=profile.full_name,
+        location=profile.location,
         error=error,
         searched=searched,
     )
@@ -306,14 +381,18 @@ def send():
     user_name = clamp_text(request.form.get("user_name", ""), MAX_NAME_LENGTH)
     data_types = request.form.getlist("data_types")
     legal_basis = clamp_text(request.form.get("legal_basis", ""), 50)
-    result_map = session.get("result_map", {})
+    result_map = result_store.store.get(session.get("results_token"))
 
     if not selected_ids:
         flash("No sites selected. Please select at least one site.", "warning")
         return redirect(url_for("index"))
 
-    if not isinstance(result_map, dict):
-        flash("Your session expired. Please run the search again.", "danger")
+    # Broker checklist entries carry their own ``broker_<id>`` identifiers and
+    # are resolved from the registry, so they work with no stored scan at all.
+    # Only a selection referring to scan results needs the map.
+    needs_results = any(not sid.startswith("broker_") for sid in selected_ids)
+    if needs_results and not result_map:
+        flash("Your scan results have expired. Please run the search again.", "warning")
         return redirect(url_for("index"))
 
     try:
@@ -405,6 +484,7 @@ def dashboard():
     """Show tracked removal requests and their status."""
     return render_template(
         "dashboard.html",
+        active_page="dashboard",
         requests=tracker.list_requests(),
         stats=tracker.summary(),
         statuses=tracker.STATUSES,
@@ -482,7 +562,7 @@ def dashboard_purge():
 @app.route("/legal")
 def legal():
     """Display the legal information page."""
-    return render_template("legal.html")
+    return render_template("legal.html", active_page="legal")
 
 
 if __name__ == "__main__":
