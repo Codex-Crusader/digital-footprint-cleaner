@@ -1,0 +1,48 @@
+{
+  "_comment": "Petition building blocks. Legal bases and data types are combined at runtime by utils/petition_writer.py. Placeholders use $name syntax (string.Template) rather than str.format, so a malformed template can never be used to walk Python object attributes. Citations were checked against the primary legislation; see README. This is a template generator, not legal advice.",
+
+  "legal_bases": [
+    {
+      "id": "gdpr",
+      "label": "GDPR - EU / EEA / UK",
+      "applies_to": "Residents of the EU, EEA, or UK, or anyone whose data is processed there.",
+      "response_days": 30,
+      "paragraph": "I make this request under Article 17 of the General Data Protection Regulation (EU) 2016/679 ('right to erasure'), and where applicable the UK GDPR. I also exercise my right under Article 21 to object to the processing of my personal data for direct marketing and profiling purposes. Under Article 12(3) you are required to respond without undue delay and in any event within one month of receipt."
+    },
+    {
+      "id": "ccpa",
+      "label": "CCPA / CPRA - California",
+      "applies_to": "California residents.",
+      "response_days": 45,
+      "paragraph": "I make this request under the California Consumer Privacy Act, as amended by the California Privacy Rights Act (Cal. Civ. Code 1798.105), which grants me the right to request deletion of personal information you have collected about me. I also direct you, under Cal. Civ. Code 1798.120, to cease selling or sharing my personal information. Under Cal. Civ. Code 1798.130 you are required to respond within 45 days."
+    },
+    {
+      "id": "dpdp",
+      "label": "DPDP Act - India",
+      "applies_to": "Data principals in India.",
+      "response_days": 30,
+      "paragraph": "I make this request under Section 12 of the Digital Personal Data Protection Act, 2023, which grants me, as a Data Principal, the right to correction and erasure of my personal data. I withdraw any consent previously given for the processing of this data under Section 6(4) of the Act, and request that processing cease accordingly."
+    },
+    {
+      "id": "generic",
+      "label": "General request - no specific jurisdiction",
+      "applies_to": "Use when no specific privacy law clearly applies, or you are unsure.",
+      "response_days": 30,
+      "paragraph": "I make this request in accordance with applicable data protection and privacy regulations, and with your own published privacy policy. Whether or not you consider yourself bound by a specific statute, I ask that you honour this request as a matter of good practice."
+    }
+  ],
+
+  "data_types": [
+    { "id": "full_profile", "label": "My entire listing / profile", "phrase": "my complete listing or profile in its entirety" },
+    { "id": "address",      "label": "Home address",               "phrase": "my current and previous home addresses" },
+    { "id": "phone",        "label": "Phone number",               "phrase": "my telephone number(s)" },
+    { "id": "email",        "label": "Email address",              "phrase": "my email address(es)" },
+    { "id": "relatives",    "label": "Relatives / associates",     "phrase": "the names of my relatives and known associates" },
+    { "id": "dob",          "label": "Date of birth / age",        "phrase": "my date of birth and age" },
+    { "id": "employment",   "label": "Employer / job title",       "phrase": "my employment history, employer, and job title" },
+    { "id": "photos",       "label": "Photographs",                "phrase": "any photographs depicting me" },
+    { "id": "financial",    "label": "Financial / property data",  "phrase": "any financial, property, or court records associated with me" }
+  ],
+
+  "body": "To whom it may concern,\n\nI am writing to request the removal of my personal information from $site_name.\n\n$target_block\nSpecifically, I request the erasure of $data_phrase.\n\n$legal_paragraph\n\nPlease confirm in writing once this information has been removed, and tell me whether you have disclosed or sold it to any third party. If you have, I request that you forward this erasure request to each such recipient.\n\nIf you believe you are not required to comply, please state the specific legal exemption you are relying on.\n\nThis request was submitted on $today. I look forward to your response within $response_days days.\n\nSincerely,\n$user_name\n"
+}

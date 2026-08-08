@@ -7,6 +7,37 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+  {#
+    Shared petition controls. Used by both the search-results form and the
+    broker-checklist form, so the two can never drift apart.
+  #}
+  {% macro petition_options(prefix) %}
+    <fieldset class="petition-options">
+      <legend>Tailor the request</legend>
+
+      <label for="{{ prefix }}_legal_basis">Legal basis</label>
+      <select id="{{ prefix }}_legal_basis" name="legal_basis">
+        {% for basis in legal_bases %}
+          <option value="{{ basis.id }}">{{ basis.label }}</option>
+        {% endfor %}
+      </select>
+      <span class="notice">Pick the law that applies where you live. Unsure? Use the general request.</span>
+
+      <span class="field-label">What should they erase?</span>
+      <ul class="option-grid">
+        {% for dtype in data_types %}
+          <li>
+            <input type="checkbox" id="{{ prefix }}_dt_{{ dtype.id }}"
+                   name="data_types" value="{{ dtype.id }}"
+                   {% if dtype.id == 'full_profile' %}checked{% endif %}>
+            <label for="{{ prefix }}_dt_{{ dtype.id }}">{{ dtype.label }}</label>
+          </li>
+        {% endfor %}
+      </ul>
+      <span class="notice">Leave everything unticked to request removal of your whole listing.</span>
+    </fieldset>
+  {% endmacro %}
+
   <main class="container">
     <h1><span class="logo">Digital Footprint Cleaner</span></h1>
     <p class="lead">See where your personal information is exposed online and get direct, verified links to remove it. Use this to check <strong>your own</strong> footprint, or someone's with their consent.</p>
@@ -39,6 +70,28 @@
              value="{{ location }}">
       <input type="submit" value="Scan My Footprint">
     </form>
+
+    <div class="probe-row">
+      <form method="POST" action="{{ url_for('signals') }}" class="card probe">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h2>Check an email address</h2>
+        <p class="notice">Finds the public Gravatar profile and GitHub accounts tied to an address. An email alone often exposes your real name, employer and linked social accounts.</p>
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" maxlength="200" required
+               placeholder="e.g., jane@example.com">
+        <input type="submit" value="Check Email Exposure">
+      </form>
+
+      <form method="POST" action="{{ url_for('username') }}" class="card probe">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h2>Check a username</h2>
+        <p class="notice">Looks for public profile pages using the same handle across platforms. Sites that cannot be checked reliably are skipped rather than guessed at.</p>
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" maxlength="100" required
+               placeholder="e.g., janedoe">
+        <input type="submit" value="Check Username">
+      </form>
+    </div>
 
     {% if report and report.total > 0 %}
       <section class="risk-card risk-{{ report.risk_level }}">
@@ -86,6 +139,8 @@
             </ul>
           {% endfor %}
 
+          {{ petition_options('results') }}
+
           <label for="user_name">Your full name (for petitions)</label>
           <input type="text" id="user_name" name="user_name"
                  maxlength="100" required
@@ -96,6 +151,122 @@
     {% elif searched and not error %}
       <section class="card">
         <p class="notice">No web results found for that search. You can still proactively remove yourself from the major data brokers below.</p>
+      </section>
+    {% endif %}
+
+    {% if broker_checks %}
+      <section class="card">
+        <h2>Data-broker deep check</h2>
+        <p class="notice">
+          Each broker was searched individually with a site-scoped query, which finds
+          listing pages a general web search does not rank. <strong>Unknown</strong> means the
+          check could not complete &mdash; it is not evidence you are absent.
+        </p>
+        <ul class="check-list">
+          {% for check in broker_checks %}
+            <li class="check check-{{ check.status }}">
+              <span class="check-status">{{ check.status | replace('_', ' ') }}</span>
+              <span class="check-name">{{ check.name }}</span>
+              {% if check.status == 'listed' and check.opt_out_url %}
+                <a class="opt-out" href="{{ check.opt_out_url }}"
+                   target="_blank" rel="noopener noreferrer">Opt out</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% if signals %}
+      <section class="card">
+        <h2>What this email reveals</h2>
+        <p class="notice">Checked <strong>{{ signals.email_redacted }}</strong>. Nothing was sent anywhere except the services being checked.</p>
+
+        <ul class="check-list">
+          <li class="check check-{{ signals.avatar.state }}">
+            <span class="check-status">{{ signals.avatar.state | replace('_', ' ') }}</span>
+            <span class="check-name">Gravatar avatar</span>
+            <span class="snippet">{{ signals.avatar.detail }}</span>
+          </li>
+          <li class="check check-{{ signals.profile.state }}">
+            <span class="check-status">{{ signals.profile.state | replace('_', ' ') }}</span>
+            <span class="check-name">Public Gravatar profile</span>
+            <span class="snippet">{{ signals.profile.detail }}</span>
+          </li>
+          <li class="check check-{{ signals.github.state }}">
+            <span class="check-status">{{ signals.github.state | replace('_', ' ') }}</span>
+            <span class="check-name">GitHub accounts using this email</span>
+            <span class="snippet">{{ signals.github.detail }}</span>
+          </li>
+        </ul>
+
+        {% if signals.profile.state == 'found' %}
+          <h3>Exposed by your public Gravatar profile</h3>
+          <dl class="profile-facts">
+            {% if signals.profile.display_name %}<dt>Name</dt><dd>{{ signals.profile.display_name }}</dd>{% endif %}
+            {% if signals.profile.username %}<dt>Username</dt><dd>{{ signals.profile.username }}</dd>{% endif %}
+            {% if signals.profile.location %}<dt>Location</dt><dd>{{ signals.profile.location }}</dd>{% endif %}
+            {% if signals.profile.job_title %}<dt>Job title</dt><dd>{{ signals.profile.job_title }}</dd>{% endif %}
+            {% if signals.profile.company %}<dt>Company</dt><dd>{{ signals.profile.company }}</dd>{% endif %}
+          </dl>
+          {% if signals.profile.accounts %}
+            <p class="notice">Linked accounts published on that profile:</p>
+            <ul class="checkbox-list">
+              {% for account in signals.profile.accounts %}
+                <li>
+                  <strong>{{ account.display or account.domain }}</strong>
+                  {% if account.url %}
+                    <span class="snippet"><a href="{{ account.url }}" target="_blank" rel="noopener noreferrer">{{ account.url }}</a></span>
+                  {% else %}
+                    <span class="snippet">(link withheld &mdash; not a safe web address)</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {% if signals.profile.profile_url %}
+            <p><a href="{{ signals.profile.profile_url }}" target="_blank" rel="noopener noreferrer">Edit or delete this profile at Gravatar</a></p>
+          {% endif %}
+        {% endif %}
+
+        {% if signals.github.users %}
+          <h3>GitHub accounts</h3>
+          <ul class="checkbox-list">
+            {% for user in signals.github.users %}
+              <li>
+                <strong>{{ user.login }}</strong>
+                {% if user.profile_url %}
+                  <span class="snippet"><a href="{{ user.profile_url }}" target="_blank" rel="noopener noreferrer">{{ user.profile_url }}</a></span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if username_results %}
+      <section class="card">
+        <h2>Profiles matching &ldquo;{{ username_query }}&rdquo;</h2>
+        <p class="notice">
+          A match means a public profile page exists at that address &mdash; not necessarily
+          that it is yours. <strong>Unknown</strong> means the platform blocked or throttled the
+          check, so nothing can be concluded either way.
+        </p>
+        <ul class="check-list">
+          {% for item in username_results %}
+            <li class="check check-{{ item.status }}">
+              <span class="check-status">{{ item.status | replace('_', ' ') }}</span>
+              <span class="check-name">{{ item.platform }}</span>
+              {% if item.status == 'found' %}
+                <span class="snippet"><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a></span>
+              {% elif item.reason %}
+                <span class="snippet">{{ item.reason }}</span>
+              {% endif %}
+              {% if item.note %}<span class="snippet">{{ item.note }}</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
       </section>
     {% endif %}
 
@@ -120,24 +291,49 @@
           {% if user_info %}Use <strong>Check</strong> to run a name-scoped search and confirm whether a site lists you.{% endif %}
           Links verified July 2026. Removals are not permanent, so repeat every few months.
         </p>
-        <ul class="broker-grid">
-          {% for b in brokers %}
-          <li>
-            <span class="broker-name">{{ b.name }}</span>
-            <span class="broker-actions">
-              {% if user_info %}
-                <a href="https://duckduckgo.com/?q={{ ('site:' ~ b.domain ~ ' \"' ~ user_info ~ '\"') | urlencode }}" target="_blank" rel="noopener noreferrer">Check</a>
-              {% endif %}
-              <a class="opt-out" href="{{ b.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt out</a>
-            </span>
-          </li>
-          {% endfor %}
-        </ul>
+        <form method="POST" action="{{ url_for('check_brokers') }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label for="broker_sweep_name">Check these sites for</label>
+          <input type="text" id="broker_sweep_name" name="user_info"
+                 maxlength="200" required
+                 placeholder="e.g., Jane Doe" value="{{ user_info }}">
+          <input type="submit" value="Run Deep Check">
+          <span class="notice">Searches each broker individually. Slower than the main scan, but far more likely to find an actual listing.</span>
+        </form>
+
+        <form method="POST" action="{{ url_for('send') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <ul class="broker-grid">
+            {% for b in brokers %}
+            <li>
+              <input type="checkbox" id="broker_{{ b.id }}"
+                     name="selected_sites" value="broker_{{ b.id }}">
+              <label class="broker-name" for="broker_{{ b.id }}">{{ b.name }}</label>
+              <span class="broker-actions">
+                {% if user_info %}
+                  <a href="https://duckduckgo.com/?q={{ ('site:' ~ b.domain ~ ' \"' ~ user_info ~ '\"') | urlencode }}" target="_blank" rel="noopener noreferrer">Check</a>
+                {% endif %}
+                <a class="opt-out" href="{{ b.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt out</a>
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
+
+          {{ petition_options('brokers') }}
+
+          <label for="broker_user_name">Your full name (for petitions)</label>
+          <input type="text" id="broker_user_name" name="user_name"
+                 maxlength="100" required placeholder="e.g., Jane Doe">
+          <input type="submit" value="Generate Petitions For Selected Brokers">
+        </form>
       </section>
     {% endif %}
 
     <div class="footer">
-      <p>Want to know your rights? <a href="{{ url_for('legal') }}">Read our legal guide</a></p>
+      <p>
+        <a href="{{ url_for('dashboard') }}">Track your removal requests</a> &middot;
+        Want to know your rights? <a href="{{ url_for('legal') }}">Read our legal guide</a>
+      </p>
     </div>
   </main>
 </body>
