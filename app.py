@@ -20,6 +20,7 @@ import secrets
 import threading
 import time
 from collections import defaultdict, deque
+from urllib.parse import urlparse
 
 # Flask is declared in both pyproject.toml ([project] dependencies) and
 # requirements.txt. PyCharm's package inspection does not pick either up in this
@@ -223,12 +224,22 @@ def login():
 def _safe_next(target: object) -> str:
     """Return a safe same-site redirect target, defaulting to the home page.
 
-    Only a path beginning with a single ``/`` is accepted. ``//evil.example``
-    is a protocol-relative URL that browsers treat as absolute, so the usual
-    "starts with /" check alone is an open-redirect.
+    Accept only local relative paths. Any URL with a scheme/host, protocol-
+    relative form, or malformed absolute form is rejected.
     """
-    if isinstance(target, str) and target.startswith("/") and not target.startswith("//"):
-        return target
+    if not isinstance(target, str):
+        return url_for("index")
+
+    normalized = target.replace("\\", "")
+    parsed = urlparse(normalized)
+
+    if (
+        not parsed.scheme
+        and not parsed.netloc
+        and normalized.startswith("/")
+        and not normalized.startswith("//")
+    ):
+        return normalized
     return url_for("index")
 
 
