@@ -29,6 +29,33 @@ The application applies defence-in-depth by default:
 | **PII in logs** | Email addresses are never logged at INFO or above. Probe failures log a static label and the exception *type* only, because several `httpx` exceptions stringify with the full request URL. |
 | **Outbound requests** | Every probe carries an explicit per-request timeout, redirects are not followed, and batches run under an overall wall-clock budget, so a slow or hostile host cannot pin a worker. |
 
+## Access control
+
+**Host-header allowlist (always on).** The app refuses any request whose `Host`
+header is not `localhost`, `127.0.0.1` or `::1` (extend with
+`DFC_ALLOWED_HOSTS`). Binding to loopback is not isolation on its own: a browser
+will resolve an attacker-controlled hostname to 127.0.0.1 and then treat
+whatever answers as same-origin. That is DNS rebinding, and CSRF tokens do not
+stop it, because the rebound page can read the token out of the response it just
+fetched. Checking the Host header does stop it.
+
+**Passcode lock (optional).** Set `DFC_PASSCODE` or `DFC_PASSCODE_HASH` and every
+page requires a login first:
+
+- PBKDF2-HMAC-SHA256, 600,000 rounds, 16-byte per-install random salt.
+- Constant-time comparison, so no timing signal.
+- Login attempts throttled per client address; a lockout refuses the correct
+  passcode too, so it cannot be sidestepped by guessing right on the next try.
+- The session is rotated on login, so a token captured before authenticating
+  cannot be replayed as an authenticated one.
+- Sliding idle timeout (`DFC_IDLE_TIMEOUT`, default 30 minutes).
+- A malformed stored hash, or a tampered session timestamp, fails closed.
+
+It is opt-in rather than mandatory: the host check already covers the remote
+attacker, and a tool that demands credential setup before it runs once is a tool
+people stop using. When no passcode is set, the header says **Unlocked** rather
+than letting the user assume a protection that is not there.
+
 ## Local data storage
 
 The removal tracker (`/dashboard`) writes to a local SQLite database at

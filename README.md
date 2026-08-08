@@ -11,17 +11,29 @@ information is exposed online and generate ready-to-send data-removal requests.
 
 ## Screenshots
 
-**Home** - enter a name or email, with the proactive data-broker opt-out checklist always available:
+**Scan.** Name and location, plus optional narrowing factors that tell namesakes
+apart. Depth is yours to choose:
 
-![Home page](docs/screenshots/home.jpg)
+![Scan form](docs/screenshots/home.jpg)
 
-**Exposure report**: results are classified by category and scored by risk:
+**Exposure report.** A readout of what was checked and what was found, coverage
+reported as prominently as results, and broker listings called out first:
 
 ![Exposure report](docs/screenshots/exposure-report.jpg)
 
-**Data-broker checklist** - verified opt-out links plus a per-broker "Check" to confirm whether a site lists you:
+**Match confidence.** Every result says why it is believed to be you, with the
+facts that matched. Results that never name the subject are separated out:
+
+![Match confidence](docs/screenshots/match-confidence.jpg)
+
+**Data-broker checklist.** Verified opt-out links for 30+ people-search sites,
+plus a per-broker check to confirm whether one lists you:
 
 ![Data-broker opt-out checklist](docs/screenshots/broker-checklist.jpg)
+
+**Removal tracker.** Opting out is a correspondence, not a click:
+
+![Removal tracker](docs/screenshots/tracker.jpg)
 
 ## Features
 

@@ -169,7 +169,7 @@ a:hover { text-decoration-color: currentColor; }
   text-decoration: none;
 }
 
-.site-nav { display: flex; gap: 18px; }
+.site-nav { display: flex; gap: 18px; align-items: center; }
 
 .site-nav a {
   font-family: var(--mono);
