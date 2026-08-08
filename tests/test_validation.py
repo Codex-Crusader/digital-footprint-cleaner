@@ -1,6 +1,10 @@
 from utils.validation import clamp_text, is_safe_http_url
 
 
+# The plain-http literals below are the subject under test, not links to follow:
+# `is_safe_http_url` must accept `http` as well as `https`, and must reject a
+# host-less `http://`. Rewriting them to https would delete that coverage.
+# noinspection HttpUrlsUsage
 def test_is_safe_url_accepts_http_and_https():
     assert is_safe_http_url("http://example.com/page")
     assert is_safe_http_url("https://example.com")
@@ -12,6 +16,7 @@ def test_is_safe_url_rejects_dangerous_schemes():
     assert not is_safe_http_url("file:///etc/passwd")
 
 
+# noinspection HttpUrlsUsage
 def test_is_safe_url_rejects_missing_host():
     assert not is_safe_http_url("http://")
     assert not is_safe_http_url("https:///nohost")

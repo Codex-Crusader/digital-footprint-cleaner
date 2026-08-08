@@ -21,9 +21,27 @@ The application applies defence-in-depth by default:
 | **Session cookies** | `HttpOnly`, `SameSite=Lax`, and `Secure` (configurable for HTTPS). |
 | **Secret key** | Sourced from the `SECRET_KEY` environment variable; a random ephemeral key is used only as a last resort, with a warning. |
 | **Request size** | `MAX_CONTENT_LENGTH` (64 KB) rejects oversized bodies. |
-| **Rate limiting** | Per-IP sliding-window limit on the search endpoint to curb abuse of the upstream search service. |
-| **Input validation** | User input is trimmed and length-limited before use. |
+| **Rate limiting** | Per-IP sliding-window limit, counted in **tokens rather than requests**. Endpoints that fan out into many upstream calls are charged accordingly (broker sweep 8, username check 12, email check 3, plain search 1), so a client cannot drain the upstream provider's quota with a handful of clicks. The username cost is derived from the platform registry at import, not hardcoded, so it cannot drift below the real fan-out. |
+| **Input validation** | User input is trimmed and length-limited before use. Usernames are restricted to `[A-Za-z0-9][A-Za-z0-9._-]*` and URL-encoded before interpolation, so a handle cannot alter a probe's request target. |
 | **Referrer leakage** | `Referrer-Policy: strict-origin-when-cross-origin`. |
+| **Third-party data** | Gravatar profile fields are attacker-influenced: anyone can put arbitrary text and links in their own public profile. Text is Jinja-autoescaped; URLs are validated before being rendered, and an account whose URL fails validation is still disclosed but without a clickable link. |
+| **No remote assets** | Avatars and third-party images are linked, never embedded. Viewing a report therefore does not announce the user's IP to Gravatar, GitHub, or any platform being checked. |
+| **PII in logs** | Email addresses are never logged at INFO or above. Probe failures log a static label and the exception *type* only, because several `httpx` exceptions stringify with the full request URL. |
+| **Outbound requests** | Every probe carries an explicit per-request timeout, redirects are not followed, and batches run under an overall wall-clock budget, so a slow or hostile host cannot pin a worker. |
+
+## Local data storage
+
+The removal tracker (`/dashboard`) writes to a local SQLite database at
+`instance/tracker.sqlite3` (override with `DFC_DB_PATH`).
+
+* It stores site names, request status, and the user's own notes. It does **not**
+  store search results or scan output.
+* That is still sensitive — it is a record of someone's exposure and their
+  attempts to reduce it — so the file is gitignored twice over (`instance/` and
+  `*.sqlite3`) and never leaves the machine.
+* The dashboard exposes a one-click **Delete All Tracked Requests** action.
+* All SQL uses bound parameters. Each call opens and closes its own connection,
+  so no connection is shared across Flask worker threads.
 
 ## Deployment notes
 

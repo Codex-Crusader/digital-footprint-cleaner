@@ -5,6 +5,7 @@ reused by the scanner, the petition writer and the Flask layer without pulling
 in anything extra.
 """
 
+from typing import TypeGuard
 from urllib.parse import urlparse
 
 # Only these URL schemes are ever considered safe to render in an ``href`` or to
@@ -18,12 +19,17 @@ MAX_QUERY_LENGTH = 200
 MAX_NAME_LENGTH = 100
 
 
-def is_safe_http_url(url: object) -> bool:
+def is_safe_http_url(url: object) -> TypeGuard[str]:
     """Return ``True`` only for well-formed ``http``/``https`` URLs.
 
     Accepts any object so callers never have to pre-validate the type; anything
     that is not a well-formed http/https string (other schemes, missing host,
     non-strings) is rejected.
+
+    Declared as a :class:`~typing.TypeGuard` rather than a plain ``bool``: a
+    successful check *is* proof the value is a ``str``, so type checkers narrow
+    it automatically and callers do not need a second ``isinstance`` guard just
+    to satisfy them.
     """
     if not isinstance(url, str) or not url:
         return False

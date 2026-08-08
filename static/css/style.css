@@ -368,6 +368,268 @@ h2 .badge {
   font-size: 0.92rem;
 }
 
+/* Secondary probes (email / username) shown side by side */
+.probe-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+.probe-row .probe {
+  margin: 18px 0 0;
+}
+
+.probe h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+/* Select controls, matched to the text inputs */
+select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 1rem;
+  background: #fff;
+  color: var(--text);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--purple-soft);
+}
+
+/* Petition tailoring controls */
+.petition-options {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 18px 18px;
+  margin: 22px 0 0;
+}
+
+.petition-options legend {
+  font-weight: 700;
+  color: var(--ink);
+  padding: 0 8px;
+  font-size: 0.92rem;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+  font-size: 0.92rem;
+}
+
+.option-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 4px 12px;
+}
+
+.option-grid li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-grid label {
+  margin: 0;
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+/* Tri-state check results (broker sweep, email signals, username presence).
+   The colour scheme is inverted from the usual: 'found' means the user IS
+   exposed, so it is the alarming one. 'unknown' must never look like a pass --
+   it means the check could not be completed at all. */
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.check {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.check-status {
+  flex: 0 0 auto;
+  min-width: 88px;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.check-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.check .snippet {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* Exposed */
+.check-found,
+.check-listed {
+  border-left-color: #d93025;
+  background: #fffafa;
+}
+.check-found .check-status,
+.check-listed .check-status {
+  background: #fdeceb;
+  color: #a50e0e;
+}
+
+/* Clear */
+.check-not_found,
+.check-not_listed {
+  border-left-color: #34a853;
+}
+.check-not_found .check-status,
+.check-not_listed .check-status {
+  background: #e9f9ef;
+  color: #1e6b34;
+}
+
+/* Could not be determined */
+.check-unknown {
+  border-left-color: #f4b400;
+  background: #fffdf7;
+}
+.check-unknown .check-status {
+  background: #fff6e0;
+  color: #7a5900;
+}
+
+/* Not attempted */
+.check-skipped {
+  border-left-color: var(--line);
+  opacity: 0.75;
+}
+.check-skipped .check-status {
+  background: #f0eef5;
+  color: var(--muted);
+}
+
+/* Gravatar profile facts */
+.profile-facts {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) 1fr;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+}
+
+.profile-facts dt {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.profile-facts dd {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Removal tracker */
+.inline-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 0;
+}
+
+.inline-form label {
+  margin: 0;
+}
+
+.inline-form input[type="submit"] {
+  margin-top: 0;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+}
+
+.inline-form select {
+  width: auto;
+  min-width: 150px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.inline-form input[type="text"] {
+  width: auto;
+  flex: 1 1 200px;
+}
+
+.check-status-todo,
+.check-status-reappeared {
+  border-left-color: #f4b400;
+}
+.check-status-sent,
+.check-status-acknowledged {
+  border-left-color: var(--purple);
+}
+.check-status-removed {
+  border-left-color: #34a853;
+}
+.check-status-refused {
+  border-left-color: #d93025;
+}
+
+.check-status-todo .check-status,
+.check-status-reappeared .check-status {
+  background: #fff6e0;
+  color: #7a5900;
+}
+.check-status-sent .check-status,
+.check-status-acknowledged .check-status {
+  background: var(--purple-soft);
+  color: var(--purple-dark);
+}
+.check-status-removed .check-status {
+  background: #e9f9ef;
+  color: #1e6b34;
+}
+.check-status-refused .check-status {
+  background: #fdeceb;
+  color: #a50e0e;
+}
+
+/* Accessible label that is visually hidden but read by screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Legal page */
 header {
   background: linear-gradient(135deg, var(--purple), var(--purple-dark));

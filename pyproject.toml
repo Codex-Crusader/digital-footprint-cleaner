@@ -1,0 +1,84 @@
+##
+# Project metadata and tooling configuration.
+#
+# This file is the single source of truth for the project's dependency list and
+# for linter/type-checker settings.
+#
+# `requirements.txt` / `requirements-dev.txt` mirror the dependency lists below
+# and remain the documented install path (`pip install -r requirements.txt`).
+# Keep the two in sync when adding a dependency.
+#
+# On PyCharm's "package is not listed in the project requirements" inspection:
+# every runtime dependency IS declared below and in requirements.txt, but that
+# inspection does not read either in this project (the interpreter is a
+# uv-managed SDK, and no requirements file is pinned under
+# Settings > Tools > Python Integrated Tools). Adding [build-system] did not
+# change it. The affected imports therefore carry an explicit
+# `# noinspection PyPackageRequirements` comment, matching how `pytest` is
+# already handled in the test suite. If you pin the requirements file in that
+# settings page, those comments become redundant and can be removed.
+#
+# On [build-system]: it makes this a complete PEP 621 project for tooling that
+# reads it. It does NOT mean the project is installable.
+#
+# `pip install .` is intentionally NOT supported and will fail loudly on
+# setuptools' flat-layout auto-discovery. That failure is the desired outcome:
+# an install would appear to succeed while breaking at runtime, because
+# `analysis.py`, `utils/petition_writer.py` and Flask itself locate `data/`,
+# `templates/` and `static/` as siblings of the source files, and `utils/
+# tracker.py` would try to create `instance/` inside site-packages. Run the app
+# from a clone with `python app.py`. Making it genuinely installable means
+# moving resource loading to `importlib.resources` first.
+##
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "digital-footprint-cleaner"
+version = "1.1.0"
+description = "A privacy-first web app to find and remove your digital footprint."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["privacy", "gdpr", "ccpa", "data-broker", "opt-out", "osint-defense"]
+
+# Runtime dependencies. Mirrored in requirements.txt.
+dependencies = [
+    "Flask>=2.3.0",
+    "ddgs>=8.0",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# Development / test dependencies. Mirrored in requirements-dev.txt.
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.8",
+    "pyflakes>=3.2",
+    "pycodestyle>=2.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/Codex-Crusader/digital-footprint-cleaner"
+Issues = "https://github.com/Codex-Crusader/digital-footprint-cleaner/issues"
+
+##
+# Tooling
+##
+
+# NOTE: pycodestyle does not read pyproject.toml, so its settings live in
+# setup.cfg instead. Do not add a [tool.pycodestyle] section here -- it would be
+# silently ignored.
+
+[tool.mypy]
+python_version = "3.11"
+files = ["app.py", "scanner.py", "analysis.py", "utils"]
+# Third-party packages here ship no type stubs; don't fail on that.
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true

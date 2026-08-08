@@ -44,9 +44,12 @@ Thumbs.db
 
 # JSON data you don’t want uploaded (optional)
 data/*.json
-# ...but do ship the curated data files that ARE part of the app
+# ...but do ship the curated data files that ARE part of the app.
+# NOTE: every curated file needs an explicit exception here, or it will be
+# silently missing from a fresh clone and the app will fall back to defaults.
 !data/services.json
 !data/brokers.json
+!data/petition_templates.json
 
 # Jupyter notebooks (if used in future)
 *.ipynb_checkpoints
@@ -65,7 +68,11 @@ htmlcov/
 # Security files
 *.key
 
-# Database files (if applicable)
+# Database files. The removal-request tracker lives in instance/tracker.sqlite3
+# and records which sites you asked to be removed from -- personal data that
+# must never be committed. `instance/` is ignored above; these are belt-and-braces.
 *.csv
 *.db
 *.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal

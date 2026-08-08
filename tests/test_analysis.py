@@ -3,10 +3,14 @@ import analysis
 
 def _sample_results():
     return [
-        {"id": "duck_0", "title": "Spokeo", "url": "https://www.spokeo.com/Jane-Doe", "snippet": ""},
-        {"id": "duck_1", "title": "LinkedIn", "url": "https://www.linkedin.com/in/jane", "snippet": ""},
-        {"id": "duck_2", "title": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Jane", "snippet": ""},
-        {"id": "duck_3", "title": "Radaris", "url": "https://radaris.com/p/Jane", "snippet": ""},
+        {"id": "duck_0", "title": "Spokeo",
+         "url": "https://www.spokeo.com/Jane-Doe", "snippet": ""},
+        {"id": "duck_1", "title": "LinkedIn",
+         "url": "https://www.linkedin.com/in/jane", "snippet": ""},
+        {"id": "duck_2", "title": "Wikipedia",
+         "url": "https://en.wikipedia.org/wiki/Jane", "snippet": ""},
+        {"id": "duck_3", "title": "Radaris",
+         "url": "https://radaris.com/p/Jane", "snippet": ""},
     ]
 
 
