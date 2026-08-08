@@ -289,7 +289,7 @@ def test_github_token_is_sent_when_present(monkeypatch):
     monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
     client = _FakeClient()
     gather_email_signals(EMAIL, client=client)
-    call = next(c for c in client.calls if "api.github.com" in c["url"])
+    call = next(c for c in client.calls if urlparse(c["url"]).hostname == "api.github.com")
     assert call["headers"]["Authorization"] == "Bearer ghp_secret"
 
 
@@ -297,14 +297,14 @@ def test_github_token_absent_sends_no_auth_header(monkeypatch):
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     client = _FakeClient()
     gather_email_signals(EMAIL, client=client)
-    call = next(c for c in client.calls if "api.github.com" in c["url"])
+    call = next(c for c in client.calls if urlparse(c["url"]).hostname == "api.github.com")
     assert "Authorization" not in call["headers"]
 
 
 def test_github_email_travels_as_a_parameter_not_in_the_url():
     client = _FakeClient()
     gather_email_signals(EMAIL, client=client)
-    call = next(c for c in client.calls if "api.github.com" in c["url"])
+    call = next(c for c in client.calls if urlparse(c["url"]).hostname == "api.github.com")
     assert NORMALISED not in call["url"]
     assert call["params"]["q"] == f"{NORMALISED} in:email"
 
