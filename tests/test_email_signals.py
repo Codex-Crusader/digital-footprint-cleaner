@@ -137,21 +137,21 @@ def test_email_is_normalised_and_hashed():
 
 
 def test_avatar_found():
-    client = _FakeClient(routes={"/avatar/": _FakeResponse(status_code=200)})
+    client = _FakeClient(routes={"avatar": _FakeResponse(status_code=200)})
     avatar = gather_email_signals(EMAIL, client=client)["avatar"]
     assert avatar["state"] == FOUND
     assert avatar["url"].startswith("https://www.gravatar.com/avatar/")
 
 
 def test_avatar_absent_is_not_found_not_unknown():
-    client = _FakeClient(routes={"/avatar/": _FakeResponse(status_code=404)})
+    client = _FakeClient(routes={"avatar": _FakeResponse(status_code=404)})
     avatar = gather_email_signals(EMAIL, client=client)["avatar"]
     assert avatar["state"] == NOT_FOUND
     assert avatar["url"] is None
 
 
 def test_avatar_unexpected_status_is_unknown():
-    client = _FakeClient(routes={"/avatar/": _FakeResponse(status_code=500)})
+    client = _FakeClient(routes={"avatar": _FakeResponse(status_code=500)})
     assert gather_email_signals(EMAIL, client=client)["avatar"]["state"] == UNKNOWN
 
 
@@ -160,7 +160,7 @@ def test_avatar_unexpected_status_is_unknown():
 
 def test_profile_parsed_correctly():
     client = _FakeClient(
-        routes={".json": _FakeResponse(status_code=200, json_data=_profile_payload())}
+        routes={"profile": _FakeResponse(status_code=200, json_data=_profile_payload())}
     )
     profile = gather_email_signals(EMAIL, client=client)["profile"]
     assert profile["state"] == FOUND
@@ -185,12 +185,12 @@ def test_profile_parsed_correctly():
 
 
 def test_profile_missing_is_not_found():
-    client = _FakeClient(routes={".json": _FakeResponse(status_code=404)})
+    client = _FakeClient(routes={"profile": _FakeResponse(status_code=404)})
     assert gather_email_signals(EMAIL, client=client)["profile"]["state"] == NOT_FOUND
 
 
 def test_profile_malformed_json_is_unknown():
-    client = _FakeClient(routes={".json": _FakeResponse(status_code=200, json_data=_MALFORMED)})
+    client = _FakeClient(routes={"profile": _FakeResponse(status_code=200, json_data=_MALFORMED)})
     profile = gather_email_signals(EMAIL, client=client)["profile"]
     assert profile["state"] == UNKNOWN
     # The documented keys still exist, so a template never hits an attribute error.
@@ -209,7 +209,7 @@ def test_profile_malformed_json_is_unknown():
     ],
 )
 def test_profile_shape_surprises_never_raise(payload):
-    client = _FakeClient(routes={".json": _FakeResponse(status_code=200, json_data=payload)})
+    client = _FakeClient(routes={"profile": _FakeResponse(status_code=200, json_data=payload)})
     profile = gather_email_signals(EMAIL, client=client)["profile"]
     assert profile["state"] in (NOT_FOUND, UNKNOWN)
     assert profile["accounts"] == []
@@ -228,7 +228,7 @@ def test_hostile_account_url_is_rejected():
         profileUrl="javascript:alert(1)",
         thumbnailUrl="data:text/html;base64,PHNjcmlwdD4=",
     )
-    client = _FakeClient(routes={".json": _FakeResponse(status_code=200, json_data=payload)})
+    client = _FakeClient(routes={"profile": _FakeResponse(status_code=200, json_data=payload)})
     signals = gather_email_signals(EMAIL, client=client)
     profile = signals["profile"]
 
@@ -258,7 +258,7 @@ def test_github_hit():
             }
         ],
     }
-    client = _FakeClient(routes={"api.github.com": _FakeResponse(200, json_data=payload)})
+    client = _FakeClient(routes={"github": _FakeResponse(200, json_data=payload)})
     github = gather_email_signals(EMAIL, client=client)["github"]
     assert github["state"] == FOUND
     assert github["total_count"] == 1
@@ -268,7 +268,7 @@ def test_github_hit():
 
 def test_github_zero_results_is_not_found():
     payload = {"total_count": 0, "items": []}
-    client = _FakeClient(routes={"api.github.com": _FakeResponse(200, json_data=payload)})
+    client = _FakeClient(routes={"github": _FakeResponse(200, json_data=payload)})
     github = gather_email_signals(EMAIL, client=client)["github"]
     assert github["state"] == NOT_FOUND
     assert github["users"] == []
@@ -277,7 +277,7 @@ def test_github_zero_results_is_not_found():
 @pytest.mark.parametrize("status", [403, 429])
 def test_github_rate_limited_is_unknown(status):
     client = _FakeClient(
-        routes={"api.github.com": _FakeResponse(status, headers={"X-RateLimit-Remaining": "0"})}
+        routes={"github": _FakeResponse(status, headers={"X-RateLimit-Remaining": "0"})}
     )
     github = gather_email_signals(EMAIL, client=client)["github"]
     assert github["state"] == UNKNOWN
@@ -315,7 +315,7 @@ def test_github_email_travels_as_a_parameter_not_in_the_url():
 def test_network_timeout_is_unknown_everywhere():
     timeout = httpx.ConnectTimeout("connection timed out")
     client = _FakeClient(
-        routes={"gravatar.com": timeout, "api.github.com": timeout},
+        routes={"gravatar": timeout, "github": timeout},
     )
     signals = gather_email_signals(EMAIL, client=client)
     assert signals["avatar"]["state"] == UNKNOWN
@@ -329,7 +329,7 @@ def test_network_timeout_is_unknown_everywhere():
 def test_unsupported_redirect_scheme_is_unknown():
     # httpx refuses to dispatch a redirect to a non-http(s) scheme; that must
     # degrade to "unknown", not escape to the caller.
-    client = _FakeClient(routes={"gravatar.com": httpx.UnsupportedProtocol("bad scheme")})
+    client = _FakeClient(routes={"gravatar": httpx.UnsupportedProtocol("bad scheme")})
     signals = gather_email_signals(EMAIL, client=client)
     assert signals["avatar"]["state"] == UNKNOWN
     assert signals["profile"]["state"] == UNKNOWN
@@ -337,7 +337,7 @@ def test_unsupported_redirect_scheme_is_unknown():
 
 def test_request_helper_raises_email_signal_error():
     assert issubclass(EmailSignalError, RuntimeError)
-    client = _FakeClient(routes={"example.com": httpx.ReadTimeout("slow")})
+    client = _FakeClient(routes={"any": httpx.ReadTimeout("slow")})
     with pytest.raises(EmailSignalError):
         email_signals._request(client, "https://example.com/probe", "test")
 
@@ -363,9 +363,9 @@ def test_injected_client_is_not_closed():
 def test_summary_counts_mixed_states():
     client = _FakeClient(
         routes={
-            "/avatar/": _FakeResponse(status_code=200),
-            ".json": _FakeResponse(status_code=404),
-            "api.github.com": _FakeResponse(status_code=403),
+            "avatar": _FakeResponse(status_code=200),
+            "profile": _FakeResponse(status_code=404),
+            "github": _FakeResponse(status_code=403),
         }
     )
     summary = gather_email_signals(EMAIL, client=client)["summary"]
@@ -396,29 +396,29 @@ def test_default_client_is_configured_defensively():
 
 
 def test_gravatar_profile_200_with_unexpected_shape_is_unknown():
-    client = _FakeClient(routes={".json": _FakeResponse(200, {"unexpected": "shape"})})
+    client = _FakeClient(routes={"profile": _FakeResponse(200, {"unexpected": "shape"})})
     assert gather_email_signals(EMAIL, client=client)["profile"]["state"] == UNKNOWN
 
 
 def test_gravatar_profile_200_with_non_list_entry_is_unknown():
-    client = _FakeClient(routes={".json": _FakeResponse(200, {"entry": {"a": 1}})})
+    client = _FakeClient(routes={"profile": _FakeResponse(200, {"entry": {"a": 1}})})
     assert gather_email_signals(EMAIL, client=client)["profile"]["state"] == UNKNOWN
 
 
 def test_gravatar_profile_404_is_still_not_found():
     # The genuine absence signal must keep working after the tightening above.
-    client = _FakeClient(routes={".json": _FakeResponse(404, None)})
+    client = _FakeClient(routes={"profile": _FakeResponse(404, None)})
     assert gather_email_signals(EMAIL, client=client)["profile"]["state"] == NOT_FOUND
 
 
 def test_github_200_missing_total_count_is_unknown():
-    client = _FakeClient(routes={"api.github.com": _FakeResponse(200, {"items": []})})
+    client = _FakeClient(routes={"github": _FakeResponse(200, {"items": []})})
     assert gather_email_signals(EMAIL, client=client)["github"]["state"] == UNKNOWN
 
 
 def test_github_200_with_non_list_items_is_unknown():
     client = _FakeClient(
-        routes={"api.github.com": _FakeResponse(200, {"total_count": 0, "items": {}})}
+        routes={"github": _FakeResponse(200, {"total_count": 0, "items": {}})}
     )
     assert gather_email_signals(EMAIL, client=client)["github"]["state"] == UNKNOWN
 
@@ -426,14 +426,14 @@ def test_github_200_with_non_list_items_is_unknown():
 def test_github_200_with_well_formed_empty_result_is_not_found():
     # A complete, valid "zero results" body IS evidence of absence.
     client = _FakeClient(
-        routes={"api.github.com": _FakeResponse(200, {"total_count": 0, "items": []})}
+        routes={"github": _FakeResponse(200, {"total_count": 0, "items": []})}
     )
     assert gather_email_signals(EMAIL, client=client)["github"]["state"] == NOT_FOUND
 
 
 def test_full_email_is_never_logged_above_debug(caplog):
     caplog.set_level("INFO", logger="utils.email_signals")
-    client = _FakeClient(routes={"gravatar.com": httpx.ConnectTimeout("nope")})
+    client = _FakeClient(routes={"gravatar": httpx.ConnectTimeout("nope")})
     gather_email_signals(EMAIL, client=client)
     assert NORMALISED not in caplog.text
     assert EMAIL not in caplog.text
