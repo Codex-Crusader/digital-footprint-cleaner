@@ -18,9 +18,11 @@ is not a risk worth carrying for zero benefit.
 
 Two kinds of selections are supported by :func:`send_petitions`:
 
-* ``duck_*`` IDs -- dynamic search results, resolved through the session's
-  ``result_map``.
-* Any other ID -- a curated service from the optional ``data/services.json``.
+* Any ID the scan returned: resolved to its URL through ``result_map``.
+  Membership of that map is the test, deliberately: the scanner owns its ID
+  format and this module must not encode a guess about it.
+* ``broker_<id>``: an entry from the data-broker registry.
+* Any other ID: a curated service from the optional ``data/services.json``.
 
 Everything degrades gracefully: if a data file is missing or malformed, a
 built-in fallback template is used so petition generation never breaks.
@@ -249,14 +251,14 @@ def send_petitions(
 
     Three ID shapes are recognised:
 
-    * ``duck_<n>``     -- a search result, resolved through ``result_map``.
-    * ``broker_<id>``  -- an entry from the data-broker registry, resolved by
+    * any ID present in ``result_map``: a search result, resolved to its URL.
+    * ``broker_<id>``: an entry from the data-broker registry, resolved by
       ``broker_by_id``. This is what the proactive opt-out checklist submits.
-    * anything else    -- a curated entry in ``data/services.json``.
+    * anything else: a curated entry in ``data/services.json``.
 
     Args:
         selected_ids: IDs chosen by the user.
-        result_map: mapping of ``duck_*`` ID -> URL, taken from the session.
+        result_map: mapping of result ID -> URL, from the scan result store.
         user_name: the requester's name (trimmed and length-limited).
         data_types: IDs of the data categories to demand erasure of.
         legal_basis: ID of the legal basis to cite.
@@ -280,7 +282,13 @@ def send_petitions(
         if not isinstance(site_id, str):
             continue
 
-        if site_id.startswith("duck_"):
+        # A search result is anything the scan actually returned, i.e. anything
+        # present in result_map. This used to test for a "duck_" prefix, which
+        # made the scanner's choice of ID format load-bearing in a module that
+        # has no business knowing it: when the deep scan began emitting "deep_"
+        # IDs, every petition for a search result silently stopped being
+        # generated and the only trace was a warning in the log.
+        if site_id in lookup_map:
             url = lookup_map.get(site_id)
             if not is_safe_http_url(url):
                 # The URL is missing or was tampered with; skip it rather than

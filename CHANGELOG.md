@@ -21,6 +21,66 @@ the proactive checklist, which are now the core of the tool.
 
 Sorry for dumping 10 month long changes all at once on the repo. i forgor
 
+## [1.2.0]
+
+Turns the single-query scan into a real deep search, teaches it to tell one
+person from their namesakes, and rebuilds the interface around reading results.
+
+### Added
+
+- **Deep multi-pass scan.** A scan is now a *plan* of narrow searches rather than
+  one broad query: name variants (`Jane Doe`, `Doe, Jane`, `Jane M Doe`), a
+  location-scoped pass, site-scoped checks against ten platforms, and
+  public-record sweeps. A Quick / Standard / Deep selector trades coverage
+  against the odds of being throttled.
+- **Narrowing factors.** Employer, school, age, phone, email, username,
+  relatives and aliases. Deliberately never added to the query: every extra
+  search term ANDs against a full-text index, so a factor-stuffed query finds
+  *fewer* pages, not more. They are scored against the results instead.
+- **Match confidence.** Each result is banded strong / likely / possible with the
+  matched facts shown, so the ranking is explainable. Name presence acts as a
+  floor: a page that never names the subject is separated out rather than counted.
+- **Scan coverage reporting.** "9 of 11 checks completed", with every pass listed
+  and failures named. A throttled sweep can no longer read like a clean result.
+- **Passcode lock** (optional, `DFC_PASSCODE`) with PBKDF2-SHA256, a per-install
+  salt, constant-time comparison, throttled attempts, session rotation on login
+  and an idle timeout.
+- **Host-header allowlist** (always on), which blocks DNS rebinding against this
+  loopback-bound app. CSRF tokens do not cover that attack.
+- **About page** crediting the creator and documenting how the tool works.
+
+### Changed
+
+- **Interface rebuilt** as a dense, near-monochrome console: hairline rules
+  instead of floating cards, monospace for machine-generated values, and colour
+  reserved strictly for status (red exposed, amber could-not-check, green clear)
+  so an "unknown" can never blend into ordinary chrome. All pages now share one
+  base template. Still no JavaScript.
+- **Shared rate governor.** Every upstream search passes one gate enforcing a
+  minimum interval and a concurrency ceiling; it widens on a throttling signal
+  and narrows on success. This is what keeps "search deeper" from meaning "show
+  more errors".
+- **Rate limiting** now charges a scan the size of its own query plan, derived
+  from the plan rather than hardcoded.
+- Every em dash and ASCII prose dash removed from the codebase and docs.
+
+### Fixed
+
+- **Petitions silently stopped generating for scan results.** `petition_writer`
+  resolved them by a hardcoded `duck_` ID prefix, so the deep scan's `deep_` IDs
+  matched nothing and produced only a log warning. Membership of the result map
+  is the test now.
+- **Session cookie overflow.** The result map lived in the signed session cookie,
+  which held ten results and not a deep scan's hundred; the browser dropped the
+  oversized cookie and petition generation broke with nothing explaining why.
+  Moved to a short-lived in-memory store, so `tracker.py`'s promise that no scan
+  output touches disk still holds.
+- **The empty state fired after the probe routes**, telling users "no web results
+  found" when no web search had run at all.
+- **Site-scoped searches missed profiles** for anyone who typed a middle name:
+  LinkedIn lists "Jane Doe", not "Jane Marie Doe".
+- 27 email-signal tests were failing on `main` from stale test-fake route labels.
+
 ## [1.1.0]
 
 Delivers the whole 1.0 roadmap, and attacks the limitation that release was
@@ -61,7 +121,7 @@ honest about: general web search does not rank data-broker listing pages.
 
 - **Rate limiting is now cost-weighted.** Endpoints are no longer equal: a plain
   search costs 1 token, but a broker sweep costs 8, a username check 12 and an
-  email check 3 — roughly one token per upstream request. The username cost is
+  email check 3: roughly one token per upstream request. The username cost is
   derived from the platform registry at import rather than hardcoded, so it
   cannot silently drift below the real fan-out. The default budget rose from 10
   to 30 to suit. Without this, one client could drain the upstream
@@ -82,7 +142,7 @@ honest about: general web search does not rank data-broker listing pages.
   leaving the app on its built-in fallbacks. Documented, and the new template
   file is now explicitly re-included.
 - `send_petitions` routed every non-`duck_*` ID through `data/services.json`,
-  which does not exist — so selecting a broker would have generated nothing at
+  which does not exist: so selecting a broker would have generated nothing at
   all. Broker IDs now resolve against the broker registry.
 - Removed the unused `beautifulsoup4` dependency (nothing imported `bs4`), and
   declared `httpx`, which was previously used only transitively via `ddgs`.
@@ -111,8 +171,8 @@ honest about: general web search does not rank data-broker listing pages.
 - Every new `POST` route (`/check-brokers`, `/signals`, `/username`, and the
   three `/dashboard/*` routes) is covered by the existing CSRF protection, with
   a parametrised test asserting it for each.
-- URLs taken from Gravatar profile data are attacker-influenced — any user can
-  put arbitrary links in their own public profile — so they are validated before
+- URLs taken from Gravatar profile data are attacker-influenced: any user can
+  put arbitrary links in their own public profile: so they are validated before
   being rendered. An account whose URL fails validation is still disclosed to
   the user, but without a clickable link.
 - Remote images are never embedded, only linked, so viewing a report does not

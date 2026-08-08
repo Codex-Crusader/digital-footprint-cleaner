@@ -19,6 +19,7 @@ import pytest
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production")
 
 import app as app_module  # noqa: E402  (import after env setup by design)
+import scanner  # noqa: E402  (same reason)
 
 # Several tests deliberately exercise failure paths (rejected CSRF tokens, rate
 # limiting, unavailable search backend). Those paths log at WARNING by design,
@@ -33,6 +34,21 @@ for _name in (
     "utils.tracker",
 ):
     logging.getLogger(_name).setLevel(logging.ERROR)
+
+
+@pytest.fixture(autouse=True)
+def _ungoverned_search():
+    """Run the shared search gate at full speed, and isolate its state.
+
+    The gate paces real upstream requests and widens itself after throttling.
+    Both behaviours are correct in production and pure cost in a suite whose
+    backend is a fake: the pacing alone added seconds, and the adaptive widening
+    leaked between tests, since a test that deliberately raises a 429 would
+    otherwise slow down every test that ran after it.
+    """
+    scanner.reset_governor(interval=0)
+    yield
+    scanner.reset_governor(interval=0)
 
 
 @pytest.fixture

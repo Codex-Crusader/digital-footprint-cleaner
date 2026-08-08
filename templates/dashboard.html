@@ -1,84 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Removal Tracker - Digital Footprint Cleaner</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <main class="container">
-    <h1><span class="logo">Removal Tracker</span></h1>
+{% extends "base.html" %}
+{% set active_page = 'dashboard' %}
+{% block title %}Removal tracker &middot; Digital Footprint Cleaner{% endblock %}
+
+{% block hero %}
+  <div class="page-head">
+    <h1>Removal tracker</h1>
     <p class="lead">
-      Opting out is a correspondence, not a click. Track who you have written to, what
-      they said, and when to chase them &mdash; brokers commonly re-list people after three
-      to six months.
+      Opting out is a correspondence, not a click. Brokers commonly re-list people
+      after three to six months.
     </p>
+  </div>
+{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul class="flashes">
-          {% for category, message in messages %}
-            <li class="flash flash-{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+{% block content %}
+  <div class="stat-row">
+    <div class="stat">
+      <span class="stat-value">{{ stats.total }}</span>
+      <span class="stat-label">tracked</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">{{ stats.open }}</span>
+      <span class="stat-label">still open</span>
+    </div>
+    <div class="stat stat-good">
+      <span class="stat-value">{{ stats.removed }}</span>
+      <span class="stat-label">confirmed removed</span>
+    </div>
+  </div>
 
-    <section class="risk-card">
-      <p>
-        <strong>{{ stats.total }}</strong> tracked &middot;
-        <strong>{{ stats.open }}</strong> still open &middot;
-        <strong>{{ stats.removed }}</strong> confirmed removed
-      </p>
-    </section>
-
-    <section class="card">
-      <h2>Track a new request</h2>
+  <section class="panel">
+    <div class="panel-head"><h2>Track a new request</h2></div>
+    <div class="panel-body">
       <form method="POST" action="{{ url_for('dashboard_add') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label for="broker_id">Data broker</label>
-        <select id="broker_id" name="broker_id">
-          <option value="">-- other / not listed --</option>
-          {% for b in brokers %}
-            <option value="{{ b.id }}">{{ b.name }}</option>
-          {% endfor %}
-        </select>
-        <span class="notice">Picking a broker fills in its domain and opt-out link automatically.</span>
+        <div class="field-row">
+          <div class="field field-grow">
+            <label for="broker_id">Data broker</label>
+            <select id="broker_id" name="broker_id">
+              <option value="">-- other / not listed --</option>
+              {% for b in brokers %}
+                <option value="{{ b.id }}">{{ b.name }}</option>
+              {% endfor %}
+            </select>
+            <span class="hint">Picking a broker fills in its domain and opt-out link automatically.</span>
+          </div>
+          <div class="field field-grow">
+            <label for="site_name">Site name</label>
+            <input type="text" id="site_name" name="site_name" maxlength="100" required
+                   placeholder="Spokeo">
+          </div>
+        </div>
 
-        <label for="site_name">Site name</label>
-        <input type="text" id="site_name" name="site_name" maxlength="100" required
-               placeholder="e.g., Spokeo">
+        <div class="field-row">
+          <div class="field field-grow">
+            <label for="subject_label">Label <span class="optional">optional</span></label>
+            <input type="text" id="subject_label" name="subject_label" maxlength="200"
+                   placeholder="work email, or leave blank">
+            <span class="hint">Only needed if you track more than one identity. Stored on your machine.</span>
+          </div>
+          <div class="field field-grow">
+            <label for="notes">Notes <span class="optional">optional</span></label>
+            <input type="text" id="notes" name="notes" maxlength="500"
+                   placeholder="submitted via their web form">
+          </div>
+        </div>
 
-        <label for="subject_label">Label <span class="notice">(optional)</span></label>
-        <input type="text" id="subject_label" name="subject_label" maxlength="200"
-               placeholder="e.g., work email, or leave blank">
-        <span class="notice">Only fill this in if you track more than one identity. It is stored on your machine.</span>
-
-        <label for="notes">Notes <span class="notice">(optional)</span></label>
-        <input type="text" id="notes" name="notes" maxlength="500"
-               placeholder="e.g., submitted via their web form">
-
-        <input type="submit" value="Add To Tracker">
+        <button type="submit" class="btn btn-primary">Add to tracker</button>
       </form>
-    </section>
+    </div>
+  </section>
 
-    {% if requests %}
-      <section class="card">
+  {% if requests %}
+    <section class="panel">
+      <div class="panel-head">
         <h2>Your requests</h2>
-        <ul class="check-list">
-          {% for item in requests %}
-            <li class="check check-status-{{ item.status }}">
-              <span class="check-status">{{ item.status }}</span>
-              <span class="check-name">{{ item.site_name }}</span>
-              {% if item.subject_label %}<span class="snippet">{{ item.subject_label }}</span>{% endif %}
-              <span class="snippet">added {{ item.created_at[:10] }}</span>
-              {% if item.notes %}<span class="snippet">{{ item.notes }}</span>{% endif %}
-              {% if item.opt_out_url %}
-                <span class="snippet"><a href="{{ item.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt-out page</a></span>
-              {% endif %}
+        <span class="count">{{ requests|length }}</span>
+      </div>
+      <ul class="check-list">
+        {% for item in requests %}
+          <li class="check check-status-{{ item.status }}">
+            <span class="check-status">{{ item.status }}</span>
+            <span class="check-name">{{ item.site_name }}</span>
+            {% if item.subject_label %}<span class="snippet">{{ item.subject_label }}</span>{% endif %}
+            <span class="snippet">added {{ item.created_at[:10] }}</span>
+            {% if item.notes %}<span class="snippet">{{ item.notes }}</span>{% endif %}
+            {% if item.opt_out_url %}
+              <a class="opt-out" href="{{ item.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt-out page</a>
+            {% endif %}
 
+            <div class="check-actions">
               <form method="POST" action="{{ url_for('dashboard_update') }}" class="inline-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="request_id" value="{{ item.id }}">
@@ -88,41 +99,48 @@
                     <option value="{{ status }}" {% if status == item.status %}selected{% endif %}>{{ status }}</option>
                   {% endfor %}
                 </select>
-                <input type="submit" value="Update">
+                <button type="submit" class="btn btn-sm">Update</button>
               </form>
 
               <form method="POST" action="{{ url_for('dashboard_update') }}" class="inline-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="request_id" value="{{ item.id }}">
                 <input type="hidden" name="action" value="delete">
-                <input type="submit" value="Delete">
+                <button type="submit" class="btn btn-sm btn-quiet">Delete</button>
               </form>
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
 
-      <section class="card">
-        <h2>Delete everything</h2>
-        <p class="notice">
+    <section class="panel danger-zone">
+      <div class="panel-head"><h2>Delete everything</h2></div>
+      <div class="panel-body">
+        <p class="note">
           This tracker is stored locally, but it is still a record of your exposure and
           what you did about it. Remove all of it at any time.
         </p>
         <form method="POST" action="{{ url_for('dashboard_purge') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="submit" value="Delete All Tracked Requests">
+          <button type="submit" class="btn btn-danger">Delete all tracked requests</button>
         </form>
-      </section>
-    {% else %}
-      <section class="card">
-        <p class="notice">Nothing tracked yet. Add a site above, or generate petitions from the scan page and record them here.</p>
-      </section>
-    {% endif %}
+      </div>
+    </section>
+  {% else %}
+    <section class="panel empty-state">
+      <div class="panel-body">
+        <p class="note">
+          Nothing tracked yet. Add a site above, or generate petitions from the scan page
+          and record them here.
+        </p>
+        <a class="btn" href="{{ url_for('index') }}">Run a scan</a>
+      </div>
+    </section>
+  {% endif %}
 
-    <div class="footer">
-      <p><a href="{{ url_for('index') }}">Back to scanning</a> &middot;
-         <a href="{{ url_for('legal') }}">Legal guide</a></p>
-    </div>
-  </main>
-</body>
-</html>
+  <p class="footer-links">
+    <a href="{{ url_for('index') }}">Back to scanning</a> &middot;
+    <a href="{{ url_for('legal') }}">Legal guide</a>
+  </p>
+{% endblock %}

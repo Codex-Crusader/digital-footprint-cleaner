@@ -1,4 +1,4 @@
-# Runtime dependencies. Mirrors [project.dependencies] in pyproject.toml --
+# Runtime dependencies. Mirrors [project.dependencies] in pyproject.toml;
 # keep the two in sync when adding a dependency.
 
 Flask>=2.3.0

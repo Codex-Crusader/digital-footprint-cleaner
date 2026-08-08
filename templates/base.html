@@ -1,0 +1,81 @@
+{#
+  Shared page shell: document head, navigation, flash messages, footer.
+
+  Every page extends this so the views cannot drift apart in markup the way
+  they had. Note the Content-Security-Policy set in app.py allows
+  `script-src 'self'` and `style-src 'self'` only: no inline <script> block
+  and no style="..." attribute anywhere in these templates would execute. The
+  interactive parts of the UI are therefore built from HTML and CSS alone
+  (details/summary, :checked siblings), which also means every one of them
+  keeps working with JavaScript disabled.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Digital Footprint Cleaner{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ url_for('index') }}">Footprint&nbsp;Cleaner</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="{{ url_for('index') }}"
+           {% if active_page == 'scan' %}class="is-active" aria-current="page"{% endif %}>Scan</a>
+        <a href="{{ url_for('dashboard') }}"
+           {% if active_page == 'dashboard' %}class="is-active" aria-current="page"{% endif %}>Tracker</a>
+        <a href="{{ url_for('legal') }}"
+           {% if active_page == 'legal' %}class="is-active" aria-current="page"{% endif %}>Rights</a>
+        <a href="{{ url_for('about') }}"
+           {% if active_page == 'about' %}class="is-active" aria-current="page"{% endif %}>About</a>
+        {#
+          The protection state is shown on every page, in both directions. A
+          privacy tool that stays quiet when nothing is protecting it lets the
+          user assume a safety they do not have, which is the one assumption
+          this app must never encourage.
+        #}
+        {% if lock_enabled and active_page != 'login' %}
+          <form method="POST" action="{{ url_for('lock') }}" class="nav-lock">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="lock-pill lock-on" title="{{ protection_explanation }}">Lock</button>
+          </form>
+        {% elif not lock_enabled %}
+          <span class="lock-pill lock-off" title="{{ protection_explanation }}">Unlocked</span>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    {% block hero %}{% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="flash flash-{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Runs locally. Nothing you type is sent anywhere except the services being
+      checked. Use it on <strong>your own</strong> footprint, or someone's with
+      their consent.
+    </p>
+    <p>
+      <a href="{{ url_for('legal') }}">Your rights</a> &middot;
+      <a href="{{ url_for('about') }}">About</a>
+    </p>
+  </footer>
+</body>
+</html>

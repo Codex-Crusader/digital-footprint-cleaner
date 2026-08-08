@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% set active_page = 'about' %}
+{% block title %}About &middot; Digital Footprint Cleaner{% endblock %}
+
+{% block hero %}
+  <div class="page-head">
+    <h1>About</h1>
+    <p class="lead">Who built this, why, and how it works underneath.</p>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <div class="panel-head"><h2>The creator</h2></div>
+    <div class="panel-body">
+      <p class="note">
+        Built by <strong>Bhargavaram Krishnapur</strong> (Codex&nbsp;Crusader).
+        This is an open-source privacy tool: no accounts, no telemetry, no data
+        leaves the machine it runs on except the queries it has to send to look
+        things up.
+      </p>
+      <dl class="profile-facts">
+        <dt>GitHub</dt>
+        <dd>
+          <a href="https://github.com/Codex-Crusader" target="_blank" rel="noopener noreferrer">
+            github.com/Codex-Crusader
+          </a>
+        </dd>
+        <dt>Portfolio</dt>
+        <dd>
+          <a href="https://codex-crusader.github.io/" target="_blank" rel="noopener noreferrer">
+            codex-crusader.github.io
+          </a>
+        </dd>
+        <dt>Source</dt>
+        <dd>
+          <a href="https://github.com/Codex-Crusader/digital-footprint-cleaner"
+             target="_blank" rel="noopener noreferrer">
+            github.com/Codex-Crusader/digital-footprint-cleaner
+          </a>
+        </dd>
+        <dt>Licence</dt>
+        <dd>MIT</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Why it exists</h2></div>
+    <div class="panel-body">
+      <p class="note">
+        Searching your own name is the obvious way to check your exposure, and it
+        is a bad one. A single query returns one ranking algorithm's ten best
+        guesses, and it systematically misses the pages that matter most:
+        people-search and directory listings rank poorly for bare names, so the
+        sites publishing your address and phone number are exactly the ones a
+        casual search never shows you.
+      </p>
+      <p class="note">
+        This tool runs several narrow searches instead of one broad one, then
+        judges which results are actually <em>you</em> rather than a namesake, and
+        gives you the verified opt-out link for each listing it finds.
+      </p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>How it works</h2></div>
+    <div class="panel-body">
+      <dl class="profile-facts">
+        <dt>Deep search</dt>
+        <dd>
+          A scan is a plan of separate searches (name variants, site-scoped
+          platform checks, public-record sweeps) run under one time budget
+          through a shared rate governor that backs off when the search provider
+          throttles it.
+        </dd>
+        <dt>Narrowing</dt>
+        <dd>
+          Employer, age, relatives and the rest are never added to the query;
+          extra search terms find <em>fewer</em> pages, not more. They are scored
+          against the results instead, so namesakes sink and real matches rise.
+        </dd>
+        <dt>Honest gaps</dt>
+        <dd>
+          A check that failed is reported as failed, never as "nothing found".
+          Telling someone they are clean when nobody managed to look is the worst
+          thing a tool like this can do.
+        </dd>
+        <dt>Storage</dt>
+        <dd>
+          Scan results live in memory for 30 minutes and never touch disk. The
+          removal tracker is a local SQLite file you can wipe in one click.
+        </dd>
+        <dt>No JavaScript</dt>
+        <dd>
+          The whole interface is HTML and CSS under a strict Content-Security-Policy.
+          Nothing here executes a script.
+        </dd>
+      </dl>
+    </div>
+  </section>
+
+  <p class="footer-links">
+    <a href="{{ url_for('index') }}">Back to scanning</a> &middot;
+    <a href="{{ url_for('legal') }}">Your rights</a>
+  </p>
+{% endblock %}

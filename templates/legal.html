@@ -1,39 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Legal Information</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Legal Information</h1>
-        <nav><a href="{{ url_for('index') }}">&larr; Back to Home</a></nav>
-    </header>
+{% extends "base.html" %}
+{% set active_page = 'legal' %}
+{% block title %}Your rights &middot; Digital Footprint Cleaner{% endblock %}
 
-    <main>
-        <section>
-            <h2>Transparency &amp; User Consent</h2>
-            <p>This application only utilizes publicly accessible search engine data to help you locate your digital footprint.</p>
-            <p>Any petitions generated are based on published privacy and takedown policies from the respective platforms.</p>
-        </section>
+{% block hero %}
+  <div class="page-head">
+    <h1>Your rights</h1>
+    <p class="lead">
+      What this tool does with your data, and which laws let you demand removal
+      of yours from someone else's database.
+    </p>
+  </div>
+{% endblock %}
 
-        <section>
-            <h2>Privacy &amp; Compliance</h2>
-            <p>We aim to support lawful digital removal requests consistent with international standards such as the General Data Protection Regulation (GDPR) and India's IT Act (2000).</p>
-            <p>No identifying user data is stored, saved, or transmitted beyond the active session.</p>
-        </section>
+{% block content %}
+  <section class="panel">
+    <div class="panel-head"><h2>What the law gives you</h2></div>
+    <div class="panel-body">
+    <dl class="profile-facts">
+      <dt>GDPR (EU / UK)</dt>
+      <dd>
+        Article 17, the "right to erasure", lets you require a controller to delete
+        personal data about you. They generally have one month to respond.
+      </dd>
+      <dt>CCPA / CPRA (California)</dt>
+      <dd>
+        A right to know what is collected, a right to delete it, and a right to opt
+        out of its sale. Data brokers must honour a verified request.
+      </dd>
+      <dt>India, IT Act 2000 &amp; DPDP Act</dt>
+      <dd>
+        Provides for correction and erasure of personal data held by a data fiduciary.
+      </dd>
+    </dl>
+    <p class="note">
+      You do not have to live in one of these places for a request to be worth
+      sending. Most large brokers operate one removal process globally because
+      running several is more expensive than running the strictest one.
+    </p>
+      </div>
+  </section>
 
-        <section>
-            <h2>Liability Disclaimer</h2>
-            <p>Use of this tool does not guarantee the removal of content. It is the user's responsibility to ensure accuracy before petition submission.</p>
-            <p>This tool acts as a facilitator and does not make legally binding representations on your behalf.</p>
-        </section>
-    </main>
+  <section class="panel">
+    <div class="panel-head"><h2>Transparency and consent</h2></div>
+    <div class="panel-body">
+    <p class="note">
+      This application only queries publicly accessible search results to help you
+      locate your own digital footprint. Petitions are generated from the published
+      privacy and takedown policies of the respective platforms.
+    </p>
+    <p class="note">
+      Use it on your own footprint, or on someone else's <strong>with their
+      consent</strong>. The narrowing details it accepts (employer, relatives,
+      age) make it materially better at picking one individual out of a crowd,
+      and that is exactly why it should not be pointed at a stranger.
+    </p>
+      </div>
+  </section>
 
-    <footer>
-        <p>&copy; 2025 Digital Footprint Cleaner. Released under the MIT License.</p>
-    </footer>
-</body>
-</html>
+  <section class="panel">
+    <div class="panel-head"><h2>What is stored, and where</h2></div>
+    <div class="panel-body">
+    <ul class="plain-list">
+      <li>Search results live in this server's memory for 30 minutes, then expire.
+        They are never written to disk.</li>
+      <li>The removal tracker is a local SQLite file on this machine. Nothing in it
+        is transmitted anywhere, and
+        <a href="{{ url_for('dashboard') }}">one button deletes all of it</a>.</li>
+      <li>Your session cookie holds an opaque token and a CSRF token. No personal
+        details are placed in it.</li>
+    </ul>
+      </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Liability disclaimer</h2></div>
+    <div class="panel-body">
+    <p class="note">
+      Use of this tool does not guarantee removal of content. It is your responsibility
+      to check accuracy before submitting a petition. This tool is a facilitator and
+      makes no legally binding representation on your behalf.
+    </p>
+      </div>
+  </section>
+
+  <p class="footer-links">
+    <a href="{{ url_for('index') }}">Back to scanning</a> &middot;
+    Released under the MIT License.
+  </p>
+{% endblock %}

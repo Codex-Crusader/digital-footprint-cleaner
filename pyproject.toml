@@ -37,7 +37,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digital-footprint-cleaner"
-version = "1.1.0"
+version = "1.2.0"
 description = "A privacy-first web app to find and remove your digital footprint."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -69,7 +69,7 @@ Issues = "https://github.com/Codex-Crusader/digital-footprint-cleaner/issues"
 ##
 
 # NOTE: pycodestyle does not read pyproject.toml, so its settings live in
-# setup.cfg instead. Do not add a [tool.pycodestyle] section here -- it would be
+# setup.cfg instead. Do not add a [tool.pycodestyle] section here: it would be
 # silently ignored.
 
 [tool.mypy]

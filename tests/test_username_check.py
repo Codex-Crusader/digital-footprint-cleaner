@@ -246,7 +246,7 @@ def test_non_string_username_raises():
         "-leadinghyphen",
         ".leadingdot",
         # clamp_text strips before truncating, so this one survives the strip
-        # and is then cut back to a value *ending* in a newline -- the case a
+        # and is then cut back to a value *ending* in a newline: the case a
         # trailing-"$" regex would wave through.
         "a" * (username_check.MAX_USERNAME_LENGTH - 1) + "\nb",
     ],
