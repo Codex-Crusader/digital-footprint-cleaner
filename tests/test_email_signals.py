@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 # pytest is a test-only dependency (requirements-dev.txt), not a runtime one.
 # noinspection PyPackageRequirements
 import pytest
@@ -38,13 +40,30 @@ class _FakeResponse:
         return self._json
 
 
+# Which probe a request belongs to, decided from the *parsed* URL: an exact
+# hostname plus a path rule.
+#
+# This deliberately does not test `"api.github.com" in url`. Substring matching
+# on a URL is a well-known sanitisation bug -- "https://evil.example/
+# api.github.com" contains that string too -- and CodeQL flags it even in tests,
+# correctly, because a fake that matches loosely can quietly route a request to
+# the wrong probe and make a test pass for the wrong reason.
+_ROUTE_MATCHERS = {
+    "avatar": lambda p: p.hostname == "www.gravatar.com" and p.path.startswith("/avatar/"),
+    "profile": lambda p: p.hostname == "www.gravatar.com" and p.path.endswith(".json"),
+    "gravatar": lambda p: p.hostname == "www.gravatar.com",
+    "github": lambda p: p.hostname == "api.github.com",
+    "any": lambda _p: True,
+}
+
+
 class _FakeClient:
     """Minimal stand-in for httpx.Client, mirroring _FakeDDGS in test_scanner.
 
-    Routes by URL substring so a test can script one probe and leave the others
-    on the default. Never touches the network; constructing a real httpx.Client
-    in tests would also risk a ResourceWarning, which pytest.ini turns into an
-    error.
+    Routes by probe label (see :data:`_ROUTE_MATCHERS`) so a test can script one
+    probe and leave the others on the default. Never touches the network;
+    constructing a real httpx.Client in tests would also risk a ResourceWarning,
+    which pytest.ini turns into an error.
     """
 
     def __init__(self, routes=None, default=None):
@@ -55,8 +74,11 @@ class _FakeClient:
 
     def get(self, url, **kwargs):
         self.calls.append({"url": url, **kwargs})
-        for fragment, outcome in self._routes.items():
-            if fragment in url:
+        parsed = urlparse(url)
+        for label, outcome in self._routes.items():
+            # An unknown label is a typo in a test; fail loudly rather than
+            # silently falling through to the default response.
+            if _ROUTE_MATCHERS[label](parsed):
                 if isinstance(outcome, Exception):
                     raise outcome
                 return outcome
