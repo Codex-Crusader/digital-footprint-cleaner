@@ -1,20 +1,19 @@
 {% extends "base.html" %}
 {% set active_page = 'dashboard' %}
-{% block title %}Removal Tracker &middot; Digital Footprint Cleaner{% endblock %}
+{% block title %}Removal tracker &middot; Digital Footprint Cleaner{% endblock %}
 
 {% block hero %}
-  <div class="hero">
+  <div class="page-head">
     <h1>Removal tracker</h1>
     <p class="lead">
-      Opting out is a correspondence, not a click. Track who you have written to, what
-      they said, and when to chase them &mdash; brokers commonly re-list people after
-      three to six months.
+      Opting out is a correspondence, not a click. Brokers commonly re-list people
+      after three to six months.
     </p>
   </div>
 {% endblock %}
 
 {% block content %}
-  <section class="stat-row">
+  <div class="stat-row">
     <div class="stat">
       <span class="stat-value">{{ stats.total }}</span>
       <span class="stat-label">tracked</span>
@@ -27,52 +26,57 @@
       <span class="stat-value">{{ stats.removed }}</span>
       <span class="stat-label">confirmed removed</span>
     </div>
-  </section>
+  </div>
 
-  <section class="card">
-    <h2>Track a new request</h2>
-    <form method="POST" action="{{ url_for('dashboard_add') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section class="panel">
+    <div class="panel-head"><h2>Track a new request</h2></div>
+    <div class="panel-body">
+      <form method="POST" action="{{ url_for('dashboard_add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <div class="field-row">
-        <div class="field field-grow">
-          <label for="broker_id">Data broker</label>
-          <select id="broker_id" name="broker_id">
-            <option value="">-- other / not listed --</option>
-            {% for b in brokers %}
-              <option value="{{ b.id }}">{{ b.name }}</option>
-            {% endfor %}
-          </select>
-          <p class="hint">Picking a broker fills in its domain and opt-out link automatically.</p>
+        <div class="field-row">
+          <div class="field field-grow">
+            <label for="broker_id">Data broker</label>
+            <select id="broker_id" name="broker_id">
+              <option value="">-- other / not listed --</option>
+              {% for b in brokers %}
+                <option value="{{ b.id }}">{{ b.name }}</option>
+              {% endfor %}
+            </select>
+            <span class="hint">Picking a broker fills in its domain and opt-out link automatically.</span>
+          </div>
+          <div class="field field-grow">
+            <label for="site_name">Site name</label>
+            <input type="text" id="site_name" name="site_name" maxlength="100" required
+                   placeholder="Spokeo">
+          </div>
         </div>
-        <div class="field field-grow">
-          <label for="site_name">Site name</label>
-          <input type="text" id="site_name" name="site_name" maxlength="100" required
-                 placeholder="e.g., Spokeo">
-        </div>
-      </div>
 
-      <div class="field-row">
-        <div class="field field-grow">
-          <label for="subject_label">Label <span class="optional">optional</span></label>
-          <input type="text" id="subject_label" name="subject_label" maxlength="200"
-                 placeholder="e.g., work email, or leave blank">
-          <p class="hint">Only fill this in if you track more than one identity. It is stored on your machine.</p>
+        <div class="field-row">
+          <div class="field field-grow">
+            <label for="subject_label">Label <span class="optional">optional</span></label>
+            <input type="text" id="subject_label" name="subject_label" maxlength="200"
+                   placeholder="work email, or leave blank">
+            <span class="hint">Only needed if you track more than one identity. Stored on your machine.</span>
+          </div>
+          <div class="field field-grow">
+            <label for="notes">Notes <span class="optional">optional</span></label>
+            <input type="text" id="notes" name="notes" maxlength="500"
+                   placeholder="submitted via their web form">
+          </div>
         </div>
-        <div class="field field-grow">
-          <label for="notes">Notes <span class="optional">optional</span></label>
-          <input type="text" id="notes" name="notes" maxlength="500"
-                 placeholder="e.g., submitted via their web form">
-        </div>
-      </div>
 
-      <button type="submit" class="btn btn-primary">Add to tracker</button>
-    </form>
+        <button type="submit" class="btn btn-primary">Add to tracker</button>
+      </form>
+    </div>
   </section>
 
   {% if requests %}
-    <section class="card">
-      <h2>Your requests</h2>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Your requests</h2>
+        <span class="count">{{ requests|length }}</span>
+      </div>
       <ul class="check-list">
         {% for item in requests %}
           <li class="check check-status-{{ item.status }}">
@@ -82,7 +86,7 @@
             <span class="snippet">added {{ item.created_at[:10] }}</span>
             {% if item.notes %}<span class="snippet">{{ item.notes }}</span>{% endif %}
             {% if item.opt_out_url %}
-              <span class="snippet"><a href="{{ item.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt-out page</a></span>
+              <a class="opt-out" href="{{ item.opt_out_url }}" target="_blank" rel="noopener noreferrer">Opt-out page</a>
             {% endif %}
 
             <div class="check-actions">
@@ -110,24 +114,28 @@
       </ul>
     </section>
 
-    <section class="card danger-zone">
-      <h2>Delete everything</h2>
-      <p class="hint hint-block">
-        This tracker is stored locally, but it is still a record of your exposure and
-        what you did about it. Remove all of it at any time.
-      </p>
-      <form method="POST" action="{{ url_for('dashboard_purge') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-danger">Delete all tracked requests</button>
-      </form>
+    <section class="panel danger-zone">
+      <div class="panel-head"><h2>Delete everything</h2></div>
+      <div class="panel-body">
+        <p class="note">
+          This tracker is stored locally, but it is still a record of your exposure and
+          what you did about it. Remove all of it at any time.
+        </p>
+        <form method="POST" action="{{ url_for('dashboard_purge') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">Delete all tracked requests</button>
+        </form>
+      </div>
     </section>
   {% else %}
-    <section class="card empty-state">
-      <p class="hint hint-block">
-        Nothing tracked yet. Add a site above, or generate petitions from the scan page
-        and record them here.
-      </p>
-      <a class="btn" href="{{ url_for('index') }}">Run a scan</a>
+    <section class="panel empty-state">
+      <div class="panel-body">
+        <p class="note">
+          Nothing tracked yet. Add a site above, or generate petitions from the scan page
+          and record them here.
+        </p>
+        <a class="btn" href="{{ url_for('index') }}">Run a scan</a>
+      </div>
     </section>
   {% endif %}
 

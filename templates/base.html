@@ -1,10 +1,10 @@
 {#
-  Shared page shell: document head, site navigation, flash messages, footer.
+  Shared page shell: document head, navigation, flash messages, footer.
 
-  Every page extends this so the three views cannot drift apart in markup the
-  way they had. Note the Content-Security-Policy set in app.py allows
-  `script-src 'self'` and `style-src 'self'` only -- no inline <script> block,
-  no style="..." attribute anywhere in these templates will execute. The
+  Every page extends this so the views cannot drift apart in markup the way
+  they had. Note the Content-Security-Policy set in app.py allows
+  `script-src 'self'` and `style-src 'self'` only -- no inline <script> block
+  and no style="..." attribute anywhere in these templates would execute. The
   interactive parts of the UI are therefore built from HTML and CSS alone
   (details/summary, :checked siblings), which also means every one of them
   keeps working with JavaScript disabled.
@@ -22,17 +22,16 @@
 
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand" href="{{ url_for('index') }}">
-        <span class="brand-mark" aria-hidden="true">&#9679;</span>
-        <span class="brand-text">Digital Footprint Cleaner</span>
-      </a>
+      <a class="brand" href="{{ url_for('index') }}">Footprint&nbsp;Cleaner</a>
       <nav class="site-nav" aria-label="Main">
         <a href="{{ url_for('index') }}"
            {% if active_page == 'scan' %}class="is-active" aria-current="page"{% endif %}>Scan</a>
         <a href="{{ url_for('dashboard') }}"
            {% if active_page == 'dashboard' %}class="is-active" aria-current="page"{% endif %}>Tracker</a>
         <a href="{{ url_for('legal') }}"
-           {% if active_page == 'legal' %}class="is-active" aria-current="page"{% endif %}>Your rights</a>
+           {% if active_page == 'legal' %}class="is-active" aria-current="page"{% endif %}>Rights</a>
+        <a href="{{ url_for('about') }}"
+           {% if active_page == 'about' %}class="is-active" aria-current="page"{% endif %}>About</a>
       </nav>
     </div>
   </header>
@@ -55,11 +54,14 @@
 
   <footer class="site-footer">
     <p>
-      Everything runs locally and nothing you type is sent anywhere except the
-      services being checked. Use this on <strong>your own</strong> footprint, or
-      someone's with their consent.
+      Runs locally. Nothing you type is sent anywhere except the services being
+      checked. Use it on <strong>your own</strong> footprint, or someone's with
+      their consent.
     </p>
-    <p><a href="{{ url_for('legal') }}">Know your rights</a></p>
+    <p>
+      <a href="{{ url_for('legal') }}">Your rights</a> &middot;
+      <a href="{{ url_for('about') }}">About</a>
+    </p>
   </footer>
 </body>
 </html>

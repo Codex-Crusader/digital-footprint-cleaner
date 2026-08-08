@@ -1,86 +1,72 @@
 /*
  * Digital Footprint Cleaner -- stylesheet.
  *
- * Two things drive the design decisions here.
+ * This is a tool, not a landing page, and it is styled like one: dense rows,
+ * hairline rules instead of floating cards, near-square corners, and monospace
+ * for every machine-generated value (URLs, statuses, scores, counts) so the eye
+ * can scan a column of them.
  *
- * 1. The app's Content-Security-Policy allows `style-src 'self'` and
- *    `script-src 'self'` only. There is no inline style attribute and no
- *    JavaScript anywhere in the templates, so every interactive control below
- *    is built from HTML and CSS alone: `details/summary` for disclosure, and
- *    `:checked ~ sibling` rules for the confidence filter. A pleasant side
- *    effect is that all of it works with scripting disabled.
+ * Two rules the rest of the file obeys.
  *
- * 2. Status colour is load-bearing, not decoration. Green must mean "checked
- *    and clear", amber must mean "could not be checked", and the two must never
- *    be confusable -- a privacy tool that renders an unknown as a pass tells
- *    someone they are safe when nobody actually looked. Every status also
- *    carries a text label for the same reason, so colour is never the only
- *    channel.
+ * 1. COLOUR IS RESERVED FOR STATUS. The interface is greyscale. Red means
+ *    exposed, amber means the check could not be completed, green means checked
+ *    and clear -- and nothing else in the UI is allowed to use those hues. A
+ *    decorative accent competing with them is how an amber "unknown" starts
+ *    reading as ordinary chrome, and telling someone they are clear when nobody
+ *    could look is the worst thing this tool can do. Match confidence is
+ *    therefore graded by weight and border, not by colour: "strong match" is a
+ *    statement about identity, not about danger.
+ *
+ * 2. NO JAVASCRIPT. The app's CSP allows script-src / style-src 'self' only,
+ *    and no template carries an inline style or script. Disclosure is
+ *    details/summary; the confidence filter is `:checked ~ sibling` rules. It
+ *    all works with scripting disabled.
  */
 
 :root {
   color-scheme: light dark;
 
-  --accent: #6d28d9;
-  --accent-strong: #5b21b6;
-  --accent-soft: #f3ecfd;
-  --accent-ring: rgba(109, 40, 217, 0.16);
+  --bg: #f7f7f8;
+  --panel: #ffffff;
+  --panel-alt: #fbfbfc;
+  --ink: #14161a;
+  --text: #383d45;
+  --muted: #6d747d;
+  --faint: #9aa1aa;
+  --line: #e3e5e9;
+  --line-strong: #c8ccd3;
 
-  --page: #f6f5fa;
-  --card: #ffffff;
-  --raised: #fbfaff;
-  --ink: #16181f;
-  --text: #3c4150;
-  --muted: #6b7280;
-  --line: #e6e4ee;
-  --line-strong: #d5d1e2;
+  /* Status only. Never used for chrome, links or emphasis. */
+  --exposed: #b42318;
+  --exposed-bg: #fdf3f2;
+  --unknown: #a15c07;
+  --unknown-bg: #fdf7ec;
+  --clear: #0a6c42;
 
-  --danger: #c22a1f;
-  --danger-bg: #fdecea;
-  --danger-line: #f0b3ad;
-  --warn: #8a6100;
-  --warn-bg: #fff5df;
-  --warn-line: #f0cf8b;
-  --ok: #1c6b39;
-  --ok-bg: #e7f8ee;
-  --ok-line: #9bd7b2;
-
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow: 0 1px 2px rgba(20, 10, 40, 0.05), 0 8px 24px rgba(20, 10, 40, 0.06);
-  --shadow-sm: 0 1px 2px rgba(20, 10, 40, 0.06);
+  --radius: 3px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
-/* Dark mode follows the OS setting. Only the tokens change -- no component
-   below needs its own dark variant, which is the point of defining them. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #a78bfa;
-    --accent-strong: #c4b5fd;
-    --accent-soft: #241d3a;
-    --accent-ring: rgba(167, 139, 250, 0.22);
+    --bg: #0c0d0f;
+    --panel: #131518;
+    --panel-alt: #17191d;
+    --ink: #e8eaed;
+    --text: #b4bac2;
+    --muted: #808892;
+    --faint: #5f666f;
+    --line: #23262b;
+    --line-strong: #363b43;
 
-    --page: #0f1117;
-    --card: #171a22;
-    --raised: #1d212b;
-    --ink: #f2f3f7;
-    --text: #c7cbd6;
-    --muted: #8f96a6;
-    --line: #272c38;
-    --line-strong: #363c4c;
-
-    --danger: #ff9c92;
-    --danger-bg: #34191a;
-    --danger-line: #6d2b2b;
-    --warn: #f2c85c;
-    --warn-bg: #2f2716;
-    --warn-line: #5e4c1f;
-    --ok: #7ddba3;
-    --ok-bg: #14291d;
-    --ok-line: #2d5c3f;
-
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --exposed: #f28b82;
+    --exposed-bg: #241615;
+    --unknown: #e0a54a;
+    --unknown-bg: #221b10;
+    --clear: #6fc292;
   }
 }
 
@@ -90,59 +76,72 @@
 
 body {
   margin: 0;
-  background: var(--page);
+  background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  line-height: 1.6;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3 {
+h1, h2, h3 {
   color: var(--ink);
-  line-height: 1.25;
-  margin: 0 0 8px;
+  line-height: 1.3;
+  margin: 0;
+  font-weight: 600;
 }
 
-h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
-h2 { font-size: 1.2rem; }
-h3 { font-size: 1rem; }
+h1 { font-size: 18px; letter-spacing: -0.01em; }
+h2 { font-size: 14px; }
+h3 { font-size: 13px; }
 
-p { margin: 0 0 12px; }
+p { margin: 0 0 10px; }
+p:last-child { margin-bottom: 0; }
 
 a {
-  color: var(--accent);
-  text-decoration: none;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--line-strong);
 }
 
-a:hover { text-decoration: underline; }
+a:hover { text-decoration-color: currentColor; }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }
 
-.skip-link {
-  position: absolute;
-  left: -9999px;
-}
-
+.skip-link { position: absolute; left: -9999px; }
 .skip-link:focus {
-  left: 12px;
-  top: 12px;
-  z-index: 10;
-  background: var(--card);
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  left: 8px; top: 8px; z-index: 10;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  padding: 8px 12px;
+}
+
+/* Micro-label: the uppercase monospace key that names a value. */
+.k,
+.panel-head,
+.filter-label,
+.why-label,
+.stat-label,
+.field > label,
+.depth-choice legend,
+.field-label,
+.coverage-group {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 /* --- Site chrome ---------------------------------------------------------- */
 
 .site-header {
-  background: var(--card);
+  background: var(--panel);
   border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
@@ -150,614 +149,554 @@ a:hover { text-decoration: underline; }
 }
 
 .site-header-inner {
-  max-width: 940px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 0 20px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
+  font-family: var(--mono);
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--ink);
-  font-size: 0.98rem;
-}
-
-.brand:hover { text-decoration: none; }
-
-.brand-mark {
-  color: var(--accent);
-  font-size: 0.8rem;
-}
-
-.site-nav {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.site-nav a {
-  padding: 6px 12px;
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.site-nav a:hover {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
   text-decoration: none;
 }
 
+.site-nav { display: flex; gap: 18px; }
+
+.site-nav a {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 14px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a:hover { color: var(--ink); }
+
 .site-nav a.is-active {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
 
 .container {
-  max-width: 940px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 28px 20px 56px;
+  padding: 22px 20px 48px;
 }
 
-.hero { margin-bottom: 22px; }
+.page-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
 
-.lead {
+.page-head .lead {
   color: var(--muted);
-  font-size: 1.02rem;
+  font-size: 12.5px;
   margin: 0;
-  max-width: 62ch;
+  max-width: 68ch;
 }
 
 .site-footer {
   border-top: 1px solid var(--line);
-  padding: 22px 20px 40px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  text-align: center;
+  padding: 16px 20px 32px;
+  color: var(--faint);
+  font-size: 11.5px;
+  max-width: 1040px;
+  margin: 0 auto;
 }
 
-.site-footer p { margin: 0 0 6px; max-width: 66ch; margin-inline: auto; }
+.site-footer p { margin: 0 0 4px; max-width: 78ch; }
 
 .footer-links {
-  margin-top: 28px;
+  margin-top: 22px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 12px;
 }
 
-/* --- Cards ---------------------------------------------------------------- */
+/* --- Panels: the only container ------------------------------------------- */
 
+.panel,
 .card {
-  background: var(--card);
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 22px 24px;
-  margin: 18px 0;
+  margin: 0 0 14px;
 }
 
-.card > h2:first-child { margin-top: 0; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-alt);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
 
-.search-card { border-top: 3px solid var(--accent); }
+.panel-head h2 {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+.panel-head .count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+
+.panel-body { padding: 14px; }
+.panel-body > :last-child { margin-bottom: 0; }
+
+.note {
+  color: var(--muted);
+  font-size: 12.5px;
+  max-width: 78ch;
+  margin: 0 0 12px;
+}
+
+.hint {
+  display: block;
+  color: var(--faint);
+  font-size: 11.5px;
+  margin: 5px 0 0;
+}
+
+.hint-block {
+  color: var(--muted);
+  font-size: 12.5px;
+  max-width: 78ch;
+  margin: 0 0 12px;
+  display: block;
+}
+
+.optional {
+  color: var(--faint);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
 
 /* --- Forms ---------------------------------------------------------------- */
 
-.field { margin: 0 0 14px; }
+.field { margin: 0 0 12px; }
+.field > label { display: block; margin: 0 0 5px; }
 
-.field-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.field-grow { flex: 1 1 240px; }
+.field-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.field-grow { flex: 1 1 220px; }
 
 .field-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 0 16px;
-}
-
-label {
-  display: block;
-  font-weight: 600;
-  color: var(--ink);
-  margin: 0 0 6px;
-  font-size: 0.9rem;
-}
-
-.optional,
-.hint {
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 0.86rem;
-}
-
-.hint { display: block; margin: 6px 0 0; }
-
-.hint-block {
-  margin: 0 0 14px;
-  max-width: 72ch;
-  line-height: 1.55;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 14px;
 }
 
 input[type="text"],
 input[type="email"],
 select {
   width: 100%;
-  padding: 11px 13px;
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  font-size: 0.98rem;
-  font-family: inherit;
-  background: var(--card);
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 13px;
+  background: var(--panel);
   color: var(--ink);
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input[type="text"]:focus,
 input[type="email"]:focus,
 select:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-ring);
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
 }
 
-input::placeholder { color: var(--muted); opacity: 0.75; }
+input::placeholder { color: var(--faint); }
+
+input[type="checkbox"],
+input[type="radio"] { accent-color: var(--ink); }
 
 .btn {
   display: inline-block;
-  background: var(--raised);
-  color: var(--ink);
-  border: 1.5px solid var(--line-strong);
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.94rem;
-  font-family: inherit;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 600;
-  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
 }
 
-.btn:hover { border-color: var(--accent); text-decoration: none; }
-.btn:active { transform: translateY(1px); }
+.btn:hover { border-color: var(--ink); }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--panel);
 }
 
-.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-primary:hover { opacity: 0.85; }
 
-.btn-lg { padding: 13px 26px; font-size: 1rem; }
-
-.btn-sm { padding: 7px 13px; font-size: 0.86rem; }
-
+.btn-lg { padding: 9px 20px; }
+.btn-sm { padding: 5px 10px; font-size: 10px; }
 .btn-quiet { color: var(--muted); }
 
+/* The one place a status colour is allowed on a control: it opts you out of a
+   listing, and it deletes the tracker. Both are consequential. */
 .btn-danger {
-  background: var(--danger-bg);
-  border-color: var(--danger-line);
-  color: var(--danger);
+  border-color: var(--exposed);
+  color: var(--exposed);
+  background: transparent;
 }
 
-.btn-danger:hover { border-color: var(--danger); }
+.btn-danger:hover { background: var(--exposed-bg); }
 
-/* --- Disclosure sections (details/summary) -------------------------------- */
+/* --- Disclosure ----------------------------------------------------------- */
 
 details.narrowing,
 details.petition-options,
 details.coverage-detail,
 details.unverified {
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 0;
-  margin: 16px 0;
-  background: var(--raised);
+  border-radius: var(--radius);
+  margin: 12px 0;
+  background: var(--panel-alt);
 }
 
 details > summary {
   cursor: pointer;
-  padding: 12px 16px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 600;
-  color: var(--ink);
-  font-size: 0.94rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
   list-style: none;
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  border-radius: var(--radius-sm);
 }
 
 details > summary::-webkit-details-marker { display: none; }
 
 details > summary::before {
-  content: "\25B8";
-  color: var(--accent);
-  font-size: 0.8rem;
-  transition: transform 0.15s;
-  display: inline-block;
+  content: "+";
+  color: var(--faint);
+  font-weight: 700;
 }
 
-details[open] > summary::before { transform: rotate(90deg); }
-
-details > summary:hover { color: var(--accent-strong); }
+details[open] > summary::before { content: "\2212"; }
+details > summary:hover { color: var(--ink); }
+details > summary .hint { display: inline; margin: 0; text-transform: none; letter-spacing: 0; }
 
 .narrowing-body,
 .petition-options-body,
 .coverage-body {
-  padding: 4px 16px 16px;
+  padding: 12px;
   border-top: 1px solid var(--line);
 }
 
-details.unverified { background: var(--card); }
-details.unverified .result-list { padding: 0 16px 16px; }
-details.unverified > .hint-block { padding: 0 16px; }
+details.unverified { background: var(--panel); }
+details.unverified > .hint-block { padding: 0 12px; }
+details.unverified .result-list { border-top: 1px solid var(--line); }
 
-/* --- Scan depth selector -------------------------------------------------- */
+/* --- Depth selector ------------------------------------------------------- */
 
-.depth-choice {
-  border: none;
-  padding: 0;
-  margin: 18px 0 6px;
-}
+.depth-choice { border: none; padding: 0; margin: 14px 0 0; }
+.depth-choice legend { padding: 0; margin-bottom: 6px; }
 
-.depth-choice legend {
-  font-weight: 600;
-  color: var(--ink);
-  font-size: 0.9rem;
-  padding: 0;
-  margin-bottom: 8px;
-}
-
-.depth-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
+.depth-grid { display: flex; flex-wrap: wrap; gap: 0; }
 
 .depth-option {
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  flex: 1 1 170px;
+  border: 1px solid var(--line-strong);
+  margin: 0 -1px 0 0;
+  padding: 8px 11px;
   cursor: pointer;
-  margin: 0;
-  font-weight: 400;
+  background: var(--panel);
   display: block;
-  background: var(--card);
-  transition: border-color 0.15s, background 0.15s;
 }
 
-.depth-option:hover { border-color: var(--accent); }
+.depth-option:first-of-type { border-radius: var(--radius) 0 0 var(--radius); }
+.depth-option:last-of-type { border-radius: 0 var(--radius) var(--radius) 0; }
+.depth-option:hover { border-color: var(--ink); position: relative; z-index: 1; }
 
-.depth-option input { margin-right: 8px; accent-color: var(--accent); }
+.depth-option input { margin: 0 7px 0 0; }
 
 .depth-name {
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--ink);
-  font-size: 0.94rem;
 }
 
 .depth-desc {
   display: block;
   color: var(--muted);
-  font-size: 0.84rem;
-  line-height: 1.45;
-  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  margin-top: 3px;
 }
 
-/* `:has` gives the selected card a visible state without JavaScript. Where it
-   is unsupported the radio dot still shows the choice, so nothing is lost. */
 .depth-option:has(input:checked) {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  position: relative;
+  z-index: 1;
 }
 
-/* --- Exposure summary ----------------------------------------------------- */
+/* --- Readout bar: coverage + exposure ------------------------------------- */
 
-.risk-card {
-  border-radius: var(--radius);
-  padding: 18px 24px;
-  margin: 18px 0;
-  border: 1px solid var(--line);
-  border-left: 6px solid var(--accent);
-  background: var(--card);
-  box-shadow: var(--shadow);
+.readout {
   display: flex;
-  align-items: center;
-  gap: 20px;
   flex-wrap: wrap;
-}
-
-.risk-badge {
-  font-size: 1.05rem;
-  font-weight: 700;
-  padding: 6px 16px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.risk-stats {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  color: var(--text);
-  font-size: 0.94rem;
-}
-
-.risk-stats strong { color: var(--ink); }
-
-.risk-High { border-left-color: var(--danger); }
-.risk-High .risk-badge { background: var(--danger-bg); color: var(--danger); }
-.risk-Medium { border-left-color: var(--warn); }
-.risk-Medium .risk-badge { background: var(--warn-bg); color: var(--warn); }
-.risk-Low { border-left-color: var(--ok); }
-.risk-Low .risk-badge { background: var(--ok-bg); color: var(--ok); }
-
-/* Dashboard stat row */
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 14px;
-  margin: 18px 0;
-}
-
-.stat {
-  background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: 16px 18px;
+  background: var(--panel);
+  margin: 0 0 14px;
 }
 
-.stat-value {
+.readout-cell {
+  flex: 1 1 150px;
+  padding: 10px 14px;
+  border-right: 1px solid var(--line);
+}
+
+.readout-cell:last-child { border-right: none; }
+
+.readout-value {
   display: block;
-  font-size: 1.7rem;
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 600;
   color: var(--ink);
-  line-height: 1.1;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
-.stat-label { color: var(--muted); font-size: 0.88rem; }
-.stat-good .stat-value { color: var(--ok); }
+.readout-value .of { color: var(--faint); font-size: 13px; }
 
-/* --- Scan coverage -------------------------------------------------------- */
+.readout-cell.is-exposed .readout-value { color: var(--exposed); }
+.readout-cell.is-unknown .readout-value { color: var(--unknown); }
+.readout-cell.is-clear .readout-value { color: var(--clear); }
 
-.coverage { border-left: 6px solid var(--ok); }
-.coverage-partial { border-left-color: var(--warn); }
+/* Left status stripe on the whole bar, matching the worst state present. */
+.readout.level-High { border-left: 3px solid var(--exposed); }
+.readout.level-Medium { border-left: 3px solid var(--unknown); }
+.readout.level-Low { border-left: 3px solid var(--clear); }
 
-.coverage-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* --- Results -------------------------------------------------------------- */
 
-.coverage-head h2 { margin: 0; }
-
-.coverage-count { color: var(--muted); font-size: 0.92rem; }
-.coverage-count strong { color: var(--ink); }
-
-.coverage-group {
-  text-transform: capitalize;
-  color: var(--muted);
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-  margin: 16px 0 4px;
-}
-
-/* --- Findings ------------------------------------------------------------- */
-
-.category { margin: 0 0 22px; }
+.category { border-top: 1px solid var(--line); }
+.category:first-of-type { border-top: none; }
 
 .category-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  margin: 0 0 8px;
-}
-
-.category-count {
+  padding: 7px 14px;
+  background: var(--panel-alt);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   color: var(--muted);
-  font-size: 0.86rem;
-  font-weight: 400;
-}
-
-.result-list {
-  list-style: none;
-  padding: 0;
   margin: 0;
 }
 
+.category-count { color: var(--faint); font-weight: 400; }
+
+/* The only category that gets colour, because a broker listing is the finding
+   that actually matters: these sites publish an address and phone number. */
+.category-head.cat-data_broker { color: var(--exposed); background: var(--exposed-bg); }
+
+.result-list { list-style: none; padding: 0; margin: 0; }
+
 .result {
   display: flex;
-  gap: 12px;
-  padding: 13px 15px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  background: var(--card);
-  transition: border-color 0.15s, background 0.15s;
+  gap: 10px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
 }
 
-.result:hover { border-color: var(--line-strong); background: var(--raised); }
+.result:first-child { border-top: none; }
+.result:hover { background: var(--panel-alt); }
 
-.result-select { margin: 2px 0 0; }
-.result-select input { accent-color: var(--accent); width: 16px; height: 16px; }
-
+.result-select { margin: 1px 0 0; flex: 0 0 auto; }
 .result-body { min-width: 0; flex: 1; }
 
 .result-head {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .result-title {
-  font-weight: 600;
   color: var(--ink);
-  font-size: 0.96rem;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .result-url {
   display: block;
-  font-size: 0.84rem;
-  word-break: break-word;
-  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+  text-decoration: none;
+  margin-top: 1px;
 }
+
+.result-url:hover { color: var(--ink); text-decoration: underline; }
 
 .result-snippet {
   color: var(--muted);
-  font-size: 0.88rem;
-  margin: 5px 0 0;
+  font-size: 12.5px;
+  margin: 4px 0 0;
 }
 
 .result-why {
-  margin: 7px 0 0;
+  margin: 5px 0 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
   flex-wrap: wrap;
+  font-size: 11.5px;
 }
 
-.why-label {
-  color: var(--muted);
-  font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-}
+.why-label { flex: 0 0 auto; }
 
 .chip {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 0.79rem;
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 0 5px;
 }
 
-.chip-muted {
-  background: var(--raised);
-  color: var(--muted);
-  border: 1px solid var(--line);
-  font-weight: 400;
-}
+.chip-muted { color: var(--faint); border-color: var(--line); }
 
-/* Confidence tags. Deliberately not a red/green scale: a "strong match" is a
-   statement about identity, not about danger, and colouring it red would read
-   as "this is bad" rather than "this is definitely you". */
+/* Confidence: graded by weight, not hue. Colour stays reserved for status. */
 .tag {
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: var(--radius);
   white-space: nowrap;
 }
 
-.tag-strong { background: var(--accent-soft); color: var(--accent-strong); }
-.tag-likely { background: var(--raised); color: var(--text); border: 1px solid var(--line-strong); }
-.tag-possible { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-.tag-unverified { background: var(--warn-bg); color: var(--warn); }
+.tag-strong { background: var(--ink); color: var(--panel); }
+.tag-likely { border: 1px solid var(--line-strong); color: var(--text); }
+.tag-possible { border: 1px solid var(--line); color: var(--faint); }
+.tag-unverified { border: 1px solid var(--unknown); color: var(--unknown); }
 
-.confidence-strong { border-left: 3px solid var(--accent); }
+.confidence-strong { box-shadow: inset 2px 0 0 var(--ink); }
 
 .confidence-legend {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
+  font-size: 11.5px;
 }
 
-/* --- Pure-CSS confidence filter ------------------------------------------- */
-/* The radios are visually hidden but stay focusable, so the control is usable
-   from the keyboard and announced by screen readers. */
+/* --- Confidence filter (pure CSS) ----------------------------------------- */
 
-.vfilter {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
+.vfilter { position: absolute; opacity: 0; width: 1px; height: 1px; }
 
 .filter-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   flex-wrap: wrap;
-  margin: 0 0 4px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
 }
 
-.filter-label {
-  color: var(--muted);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-}
+.filter-label { margin-right: 10px; }
 
 .filter-row label {
-  margin: 0;
-  padding: 5px 13px;
-  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 4px 10px;
   border: 1px solid var(--line-strong);
+  margin: 0 -1px 0 0;
   cursor: pointer;
-  font-size: 0.86rem;
-  font-weight: 600;
   color: var(--muted);
-  background: var(--card);
+  background: var(--panel);
 }
 
-.filter-row label:hover { border-color: var(--accent); color: var(--accent-strong); }
+.filter-row label:first-of-type { border-radius: var(--radius) 0 0 var(--radius); }
+.filter-row label:last-of-type { border-radius: 0 var(--radius) var(--radius) 0; }
+.filter-row label:hover { color: var(--ink); }
 
 #f-all:checked ~ .filter-row label[for="f-all"],
 #f-likely:checked ~ .filter-row label[for="f-likely"],
 #f-strong:checked ~ .filter-row label[for="f-strong"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--panel);
+  position: relative;
+  z-index: 1;
 }
 
-.vfilter:focus-visible ~ .filter-row label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vfilter:focus-visible ~ .filter-row label { outline: 2px solid var(--ink); outline-offset: 1px; }
 
 #f-likely:checked ~ form .result.confidence-possible,
 #f-strong:checked ~ form .result.confidence-possible,
-#f-strong:checked ~ form .result.confidence-likely {
-  display: none;
-}
+#f-strong:checked ~ form .result.confidence-likely { display: none; }
 
-/* A category whose every result is filtered out would otherwise leave a
-   dangling heading with nothing under it. */
+/* A category filtered down to nothing would leave a dangling header. */
 #f-likely:checked ~ form .category:not(:has(.result.confidence-strong, .result.confidence-likely)),
-#f-strong:checked ~ form .category:not(:has(.result.confidence-strong)) {
-  display: none;
-}
+#f-strong:checked ~ form .category:not(:has(.result.confidence-strong)) { display: none; }
+
+/* The count is rendered server-side and cannot be recomputed without
+   JavaScript, so while a filter is active it would report a stale number. */
+#f-likely:checked ~ form .category-count,
+#f-strong:checked ~ form .category-count { display: none; }
 
 /* --- Broker sections ------------------------------------------------------ */
 
-.brokers-found {
-  border: 1px solid var(--danger-line);
-  border-left: 6px solid var(--danger);
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 18px 24px;
-  margin: 18px 0;
-  box-shadow: var(--shadow);
-}
-
-.brokers-found h2 { color: var(--danger); margin-top: 0; }
+.brokers-found { border-left: 3px solid var(--exposed); }
+.brokers-found .panel-head { color: var(--exposed); background: var(--exposed-bg); }
 
 .broker-hits { list-style: none; padding: 0; margin: 0; }
 
@@ -767,309 +706,297 @@ details.unverified > .hint-block { padding: 0 16px; }
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
-  padding: 12px 0;
+  padding: 9px 14px;
   border-top: 1px solid var(--line);
 }
 
 .broker-hits li:first-child { border-top: none; }
-
-.broker-checklist { border-top: 3px solid var(--accent); }
+.broker-hits strong { color: var(--ink); font-size: 13px; }
 
 .broker-grid {
   list-style: none;
   padding: 0;
-  margin: 14px 0 0;
+  margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
 .broker-grid li {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--card);
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 6px 14px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  font-size: 12.5px;
 }
 
-.broker-grid li:hover { border-color: var(--line-strong); }
-
-.broker-grid input { accent-color: var(--accent); }
-
-.broker-name {
-  font-size: 0.9rem;
-  margin: 0;
-  font-weight: 500;
-  flex: 1;
-  cursor: pointer;
-}
+.broker-grid li:hover { background: var(--panel-alt); }
+.broker-name { flex: 1; margin: 0; cursor: pointer; color: var(--text); }
 
 .broker-actions {
   display: flex;
   gap: 10px;
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.broker-grid .opt-out { font-weight: 600; }
+.broker-actions a { color: var(--muted); text-decoration: none; }
+.broker-actions a:hover { color: var(--ink); text-decoration: underline; }
 
-/* --- Tri-state check lists ------------------------------------------------ */
-/* Used by the broker sweep, the email signals, the username check and the scan
-   coverage panel. The colour scheme is inverted from the usual: 'found' means
-   the user IS exposed, so it is the alarming one, and 'unknown' must never look
-   like a pass -- it means the check could not be completed at all. */
+/* --- Tri-state check rows -------------------------------------------------- */
+/* Broker sweep, email signals, username presence, scan coverage. The colour
+   scheme is inverted from the usual: 'found' means the user IS exposed, so it
+   is the alarming one, and 'unknown' must never look like a pass. */
 
-.check-list { list-style: none; padding: 0; margin: 10px 0 0; }
+.check-list { list-style: none; padding: 0; margin: 0; }
 
 .check {
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--line);
-  border-radius: var(--radius-sm);
-  margin-bottom: 7px;
-  background: var(--card);
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  border-left: 2px solid transparent;
 }
+
+.check:first-child { border-top: none; }
 
 .check-status {
   flex: 0 0 auto;
-  min-width: 86px;
-  text-align: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
+  width: 84px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--faint);
 }
 
-.check-name { font-weight: 600; color: var(--ink); font-size: 0.93rem; }
+.check-name { color: var(--ink); font-size: 12.5px; font-weight: 500; }
 
 .check .snippet {
   color: var(--muted);
-  font-size: 0.86rem;
-  word-break: break-word;
+  font-size: 11.5px;
+  font-family: var(--mono);
+  word-break: break-all;
 }
 
-.check-actions {
-  flex-basis: 100%;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+.check-actions { flex-basis: 100%; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 
 /* Exposed / present */
 .check-found,
-.check-listed {
-  border-left-color: var(--danger);
-}
+.check-listed { border-left-color: var(--exposed); background: var(--exposed-bg); }
 .check-found .check-status,
-.check-listed .check-status {
-  background: var(--danger-bg);
-  color: var(--danger);
-}
+.check-listed .check-status { color: var(--exposed); }
 
 /* Checked and clear */
 .check-not_found,
 .check-not_listed,
 .check-pass-ok,
-.check-pass-empty {
-  border-left-color: var(--ok);
-}
+.check-pass-empty { border-left-color: var(--clear); }
 .check-not_found .check-status,
 .check-not_listed .check-status,
 .check-pass-ok .check-status,
-.check-pass-empty .check-status {
-  background: var(--ok-bg);
-  color: var(--ok);
-}
+.check-pass-empty .check-status { color: var(--clear); }
 
 /* Could not be determined -- never styled as a pass. */
 .check-unknown,
-.check-pass-failed {
-  border-left-color: var(--warn);
-}
+.check-pass-failed { border-left-color: var(--unknown); background: var(--unknown-bg); }
 .check-unknown .check-status,
-.check-pass-failed .check-status {
-  background: var(--warn-bg);
-  color: var(--warn);
-}
+.check-pass-failed .check-status { color: var(--unknown); }
 
 /* Not attempted */
 .check-skipped,
-.check-pass-skipped {
-  border-left-color: var(--line-strong);
-  opacity: 0.8;
-}
+.check-pass-skipped { border-left-color: var(--line-strong); }
 .check-skipped .check-status,
-.check-pass-skipped .check-status {
-  background: var(--raised);
-  color: var(--muted);
+.check-pass-skipped .check-status { color: var(--faint); }
+
+.check .opt-out {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--exposed);
+  text-decoration: none;
 }
+
+.check .opt-out:hover { text-decoration: underline; }
 
 /* Tracker statuses */
 .check-status-todo,
-.check-status-reappeared { border-left-color: var(--warn); }
-.check-status-sent,
-.check-status-acknowledged { border-left-color: var(--accent); }
-.check-status-removed { border-left-color: var(--ok); }
-.check-status-refused { border-left-color: var(--danger); }
-
+.check-status-reappeared { border-left-color: var(--unknown); }
 .check-status-todo .check-status,
-.check-status-reappeared .check-status { background: var(--warn-bg); color: var(--warn); }
+.check-status-reappeared .check-status { color: var(--unknown); }
+.check-status-sent,
+.check-status-acknowledged { border-left-color: var(--line-strong); }
 .check-status-sent .check-status,
-.check-status-acknowledged .check-status { background: var(--accent-soft); color: var(--accent-strong); }
-.check-status-removed .check-status { background: var(--ok-bg); color: var(--ok); }
-.check-status-refused .check-status { background: var(--danger-bg); color: var(--danger); }
+.check-status-acknowledged .check-status { color: var(--muted); }
+.check-status-removed { border-left-color: var(--clear); }
+.check-status-removed .check-status { color: var(--clear); }
+.check-status-refused { border-left-color: var(--exposed); }
+.check-status-refused .check-status { color: var(--exposed); }
 
-/* --- Badges --------------------------------------------------------------- */
-
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+.coverage-group {
+  padding: 10px 0 4px;
+  margin: 0;
 }
-
-.cat-data_broker { background: var(--danger-bg); color: var(--danger); }
-.cat-public_records { background: var(--warn-bg); color: var(--warn); }
 
 /* --- Petition options ----------------------------------------------------- */
 
-.field-label {
-  display: block;
-  font-weight: 600;
-  color: var(--ink);
-  margin: 4px 0 6px;
-  font-size: 0.9rem;
-}
+.field-label { display: block; margin: 0 0 5px; }
 
 .option-grid {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 4px 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2px 12px;
 }
 
-.option-grid li { display: flex; align-items: center; gap: 8px; }
-.option-grid input { accent-color: var(--accent); }
-
-.option-grid label {
-  margin: 0;
-  font-weight: 400;
-  font-size: 0.89rem;
-}
+.option-grid li { display: flex; align-items: center; gap: 7px; }
+.option-grid label { margin: 0; font-size: 12.5px; color: var(--text); }
 
 .petition {
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 14px 18px;
-  margin-bottom: 12px;
-  background: var(--raised);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  background: var(--panel-alt);
+}
+
+.petition > strong {
+  display: block;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .petition pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
-  font-size: 0.85rem;
-  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 12px;
   color: var(--text);
 }
 
-/* --- Probes --------------------------------------------------------------- */
+/* --- Dashboard stats ------------------------------------------------------ */
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  margin: 0 0 14px;
+}
+
+.stat { flex: 1 1 140px; padding: 10px 14px; border-right: 1px solid var(--line); }
+.stat:last-child { border-right: none; }
+
+.stat-value {
+  display: block;
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.stat-label { display: block; }
+.stat-good .stat-value { color: var(--clear); }
+
+/* --- Probes, misc --------------------------------------------------------- */
 
 .probe-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
-.probe-row .probe { margin: 18px 0 0; }
-.probe h2 { margin-top: 0; font-size: 1.08rem; }
+.probe-row .panel { margin: 0; }
 
-/* --- Flash messages ------------------------------------------------------- */
-
-.flashes { list-style: none; padding: 0; margin: 0 0 16px; }
+.flashes { list-style: none; padding: 0; margin: 0 0 14px; }
 
 .flash {
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 10px;
-  border: 1px solid transparent;
-  font-size: 0.93rem;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  background: var(--panel);
 }
 
-.flash-success { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok); }
-.flash-warning { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn); }
-.flash-danger { background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger); }
-
-/* --- Misc ----------------------------------------------------------------- */
+.flash-success { border-left-color: var(--clear); color: var(--clear); }
+.flash-warning { border-left-color: var(--unknown); color: var(--unknown); }
+.flash-danger { border-left-color: var(--exposed); color: var(--exposed); }
 
 .inline-form {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin: 12px 0 0;
 }
 
 .inline-form .field { margin: 0; }
-.inline-form select { width: auto; min-width: 150px; }
+.inline-form select { width: auto; min-width: 130px; }
 
 .profile-facts {
   display: grid;
-  grid-template-columns: minmax(120px, auto) 1fr;
-  gap: 8px 18px;
-  margin: 10px 0 0;
+  grid-template-columns: minmax(130px, auto) 1fr;
+  gap: 7px 16px;
+  margin: 0;
 }
 
-.profile-facts dt { font-weight: 700; color: var(--ink); font-size: 0.9rem; }
-.profile-facts dd { margin: 0; font-size: 0.92rem; }
-
-.plain-list { margin: 0; padding-left: 20px; }
-.plain-list li { margin-bottom: 8px; }
-
-.danger-zone { border-left: 4px solid var(--danger); }
-
-.empty-state { text-align: center; }
-.empty-state .hint-block { margin-inline: auto; }
-
-.snippet {
-  display: block;
+.profile-facts dt {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
-  font-size: 0.87rem;
-  word-break: break-word;
+  padding-top: 2px;
 }
+
+.profile-facts dd { margin: 0; font-size: 12.5px; }
+
+.plain-list { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text); }
+.plain-list li { margin-bottom: 6px; }
+
+.danger-zone { border-left: 3px solid var(--exposed); }
+.empty-state .panel-body { text-align: center; padding: 26px 14px; }
+
+.snippet { display: block; color: var(--muted); font-size: 11.5px; word-break: break-word; }
 
 .visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
-@media (max-width: 600px) {
-  .container { padding: 20px 14px 44px; }
-  h1 { font-size: 1.55rem; }
-  .card { padding: 18px 16px; }
-  .risk-card { padding: 16px 18px; }
+@media (max-width: 620px) {
+  .container { padding: 16px 12px 36px; }
+  .readout-cell, .stat { border-right: none; border-bottom: 1px solid var(--line); }
+  .readout-cell:last-child, .stat:last-child { border-bottom: none; }
+  .depth-option { flex-basis: 100%; margin: 0 0 -1px; border-radius: 0; }
+  .check-status { width: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

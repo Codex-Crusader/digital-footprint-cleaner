@@ -530,3 +530,101 @@ def test_dashboard_tolerates_a_non_numeric_id(client, csrf_token, tracker_db):
 )
 def test_new_post_routes_require_csrf(client, route):
     assert client.post(route, data={}).status_code == 400
+
+
+# --- Result storage across the scan -> petition round trip -------------------
+def test_large_scan_survives_the_send_round_trip(client, csrf_token, monkeypatch):
+    """A deep scan's results must still be resolvable when /send is posted.
+
+    Regression for a silent failure: the id-to-URL map used to live in the Flask
+    session, which is a signed cookie. Ten results fitted; a deep scan's hundred
+    do not, so the browser dropped an oversized cookie and petition generation
+    reported "nothing could be generated" with nothing explaining why.
+    """
+    results = [
+        {"id": f"deep_{i}", "title": f"Result {i}",
+         "url": f"https://example-{i}.com/jane-doe-profile-page", "snippet": "x" * 80}
+        for i in range(120)
+    ]
+    _patch_scan(monkeypatch, results=results)
+
+    scan = client.post("/", data={"user_info": "Jane Doe", "csrf_token": csrf_token})
+    assert scan.status_code == 200
+
+    # The cookie must stay small: it carries a token, not the map.
+    cookie = scan.headers.get("Set-Cookie", "")
+    assert len(cookie) < 1000, "session cookie is carrying the result map again"
+
+    resp = client.post(
+        "/send",
+        data={"selected_sites": ["deep_0", "deep_119"],
+              "user_name": "Jane Doe", "csrf_token": csrf_token},
+    )
+    assert resp.status_code == 200
+    assert b"https://example-119.com/jane-doe-profile-page" in resp.data
+
+
+def test_expired_results_ask_for_a_rescan_rather_than_failing_silently(
+    client, csrf_token, monkeypatch
+):
+    _patch_scan(monkeypatch, results=[
+        {"id": "deep_0", "title": "P", "url": "https://example.com/a", "snippet": ""}])
+    client.post("/", data={"user_info": "Jane", "csrf_token": csrf_token})
+    app_module.result_store.store.clear()  # simulate expiry
+
+    resp = client.post(
+        "/send",
+        data={"selected_sites": "deep_0", "user_name": "Jane", "csrf_token": csrf_token},
+        follow_redirects=True,
+    )
+    assert b"expired" in resp.data
+
+
+def test_broker_selection_works_without_any_stored_scan(client, csrf_token):
+    # Broker checklist ids resolve from the registry, so they must not require
+    # a scan to have run first.
+    app_module.result_store.store.clear()
+    resp = client.post(
+        "/send",
+        data={"selected_sites": "broker_spokeo", "user_name": "Jane Doe",
+              "csrf_token": csrf_token},
+    )
+    assert resp.status_code == 200
+    assert b"Generated petitions" in resp.data
+
+
+# --- Static pages -----------------------------------------------------------
+def test_about_page_links_the_creator(client):
+    resp = client.get("/about")
+    assert resp.status_code == 200
+    assert b"https://github.com/Codex-Crusader" in resp.data
+    assert b"https://codex-crusader.github.io/" in resp.data
+
+
+def test_every_page_shares_the_same_navigation(client):
+    # All four views extend base.html, so a nav link added in one place appears
+    # everywhere. This catches a page that quietly stops extending it.
+    for path in ("/", "/dashboard", "/legal", "/about"):
+        body = client.get(path).data
+        for link in (b'href="/"', b'href="/dashboard"', b'href="/legal"', b'href="/about"'):
+            assert link in body, f"{link!r} missing from {path}"
+
+
+def test_external_links_are_rel_protected(client):
+    # window.opener access and referrer leakage, on a page whose whole purpose
+    # is privacy.
+    import re as _re
+
+    for path in ("/about", "/legal", "/"):
+        html = client.get(path).data.decode()
+        for anchor in _re.findall(r'<a\b[^>]*target="_blank"[^>]*>', html):
+            assert 'rel="noopener noreferrer"' in anchor, f"{anchor} on {path}"
+
+
+def test_no_inline_script_or_style_survives_the_csp(client):
+    # The CSP allows script-src/style-src 'self' only, so an inline script or a
+    # style="..." attribute would silently not apply. Assert none creep in.
+    for path in ("/", "/dashboard", "/legal", "/about"):
+        html = client.get(path).data.decode().lower()
+        assert "<script" not in html, path
+        assert 'style="' not in html, path

@@ -3,7 +3,7 @@
 {% block title %}Your rights &middot; Digital Footprint Cleaner{% endblock %}
 
 {% block hero %}
-  <div class="hero">
+  <div class="page-head">
     <h1>Your rights</h1>
     <p class="lead">
       What this tool does with your data, and which laws let you demand removal
@@ -13,8 +13,9 @@
 {% endblock %}
 
 {% block content %}
-  <section class="card">
-    <h2>What the law gives you</h2>
+  <section class="panel">
+    <div class="panel-head"><h2>What the law gives you</h2></div>
+    <div class="panel-body">
     <dl class="profile-facts">
       <dt>GDPR (EU / UK)</dt>
       <dd>
@@ -31,30 +32,34 @@
         Provides for correction and erasure of personal data held by a data fiduciary.
       </dd>
     </dl>
-    <p class="hint hint-block">
+    <p class="note">
       You do not have to live in one of these places for a request to be worth
       sending. Most large brokers operate one removal process globally because
       running several is more expensive than running the strictest one.
     </p>
+      </div>
   </section>
 
-  <section class="card">
-    <h2>Transparency and consent</h2>
-    <p>
+  <section class="panel">
+    <div class="panel-head"><h2>Transparency and consent</h2></div>
+    <div class="panel-body">
+    <p class="note">
       This application only queries publicly accessible search results to help you
       locate your own digital footprint. Petitions are generated from the published
       privacy and takedown policies of the respective platforms.
     </p>
-    <p>
+    <p class="note">
       Use it on your own footprint, or on someone else's <strong>with their
       consent</strong>. The narrowing details it accepts &mdash; employer, relatives,
       age &mdash; make it materially better at picking one individual out of a crowd,
       and that is exactly why it should not be pointed at a stranger.
     </p>
+      </div>
   </section>
 
-  <section class="card">
-    <h2>What is stored, and where</h2>
+  <section class="panel">
+    <div class="panel-head"><h2>What is stored, and where</h2></div>
+    <div class="panel-body">
     <ul class="plain-list">
       <li>Search results live in this server's memory for 30 minutes, then expire.
         They are never written to disk.</li>
@@ -64,15 +69,18 @@
       <li>Your session cookie holds an opaque token and a CSRF token. No personal
         details are placed in it.</li>
     </ul>
+      </div>
   </section>
 
-  <section class="card">
-    <h2>Liability disclaimer</h2>
-    <p>
+  <section class="panel">
+    <div class="panel-head"><h2>Liability disclaimer</h2></div>
+    <div class="panel-body">
+    <p class="note">
       Use of this tool does not guarantee removal of content. It is your responsibility
       to check accuracy before submitting a petition. This tool is a facilitator and
       makes no legally binding representation on your behalf.
     </p>
+      </div>
   </section>
 
   <p class="footer-links">

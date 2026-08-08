@@ -565,6 +565,12 @@ def legal():
     return render_template("legal.html", active_page="legal")
 
 
+@app.route("/about")
+def about():
+    """Display the about / creator page."""
+    return render_template("about.html", active_page="about")
+
+
 if __name__ == "__main__":
     # Debug mode is opt-in via FLASK_ENV=development and must stay off in prod.
     app.run(debug=DEBUG_MODE)
