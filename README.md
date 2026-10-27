@@ -6,7 +6,7 @@
 [![Tests](https://img.shields.io/badge/tests-362%20passing-brightgreen.svg)](tests/)
 [![Security](https://img.shields.io/badge/security-hardened-1f6feb.svg)](SECURITY.md)
 
-> **Written up in full:** [codex-crusader.github.io/projects/digital-footprint-cleaner/](https://codex-crusader.github.io/projects/digital-footprint-cleaner/) covers the problem, the architecture, the results and what it deliberately does not do.
+> **Related post:** [Local-first software: why your tools should run on your own machine](https://codex-crusader.github.io/writing/local-first-software/)
 
 A privacy-first, open-source web app that helps you find where your personal
 information is exposed online and generate ready-to-send data-removal requests. (still in development)
